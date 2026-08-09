@@ -70,7 +70,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
+  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 
@@ -161,7 +161,7 @@ function CoursesContent() {
 
   // Derive Standalone Courses Catalog
   const coursesCatalog: Course[] = useMemo(() => {
-    const rawCatalog = getStandaloneCourses(profile?.learning_goal || "Web Development", activePathModules)
+    const rawCatalog = getStandaloneCourses(profile?.learning_goal, profile?.current_level, activePathModules)
     
     return rawCatalog.map((course) => ({
       ...course,
@@ -410,7 +410,7 @@ function CoursesContent() {
           activeFilter={activeFilter}
           setActiveFilter={setActiveFilter}
           onSelectCourse={handleSelectCourse}
-          learnerGoal={profile?.learning_goal || "Web Development"}
+          learnerGoal={profile?.learning_goal || "your target goal"}
         />
       </main>
     </div>

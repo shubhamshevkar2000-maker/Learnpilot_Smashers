@@ -46,8 +46,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments", active: true },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
-  { id: "settings", label: "Settings", icon: Settings, href: "#" },
+  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 
 export default function AssessmentsPage() {
