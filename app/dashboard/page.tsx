@@ -47,7 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard", active: true },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
   { id: "courses", label: "Courses", icon: BookOpen, href: "#" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "#" },
+  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "#" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "#" },
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
