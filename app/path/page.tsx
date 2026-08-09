@@ -91,7 +91,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
-  { id: "settings", label: "Settings", icon: Settings, href: "#" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 
 export default function LearningPathPage() {

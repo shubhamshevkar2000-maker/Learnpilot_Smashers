@@ -15,17 +15,23 @@ import {
   LogOut,
   Menu,
   X,
-  ArrowUpRight,
   ArrowRight,
   Sparkles,
   Calendar,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  PlayCircle,
+  User,
+  Target,
+  Trophy,
 } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { createClient } from "@/lib/supabase/client"
-import { getOrCreateActiveCurriculum, type ActiveCurriculum } from "@/lib/services/curriculum-service"
-import type { LearnerProfile, CurrentLevel } from "@/types/database.types"
+import { getActiveCurriculumFoundation, getOrCreateActiveCurriculum, type ActiveCurriculum } from "@/lib/services/curriculum-service"
+import type { LearnerProfile, CurrentLevel, ModuleActivity } from "@/types/database.types"
 
 // Readable levels mapping
 const LEVEL_LABELS: Record<CurrentLevel, string> = {
@@ -53,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
-  { id: "settings", label: "Settings", icon: Settings, href: "#" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 
 export default function DashboardPage() {
@@ -62,6 +68,11 @@ export default function DashboardPage() {
       <DashboardContent />
     </ProtectedRoute>
   )
+}
+
+interface FlattenedActivity extends ModuleActivity {
+  module_title: string
+  module_sequence: number
 }
 
 function DashboardContent() {
@@ -77,7 +88,7 @@ function DashboardContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeToast, setActiveToast] = useState<string | null>(null)
 
-  // Fetch real profile & existing plan
+  // Fetch real profile & complete curriculum foundation with activities
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
 
@@ -100,30 +111,12 @@ function DashboardContent() {
 
       setProfile(profData as LearnerProfile)
 
-      // Fetch active learning plan & modules if already created
-      const { data: existingPlan } = await supabase
-        .from("learning_plans")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle()
-
-      if (existingPlan) {
-        const { data: modules } = await supabase
-          .from("learning_modules")
-          .select("*")
-          .eq("plan_id", existingPlan.id)
-          .eq("user_id", user.id)
-          .order("sequence_order", { ascending: true })
-
-        setCurriculum({
-          plan: existingPlan,
-          modules: modules || [],
-        })
-      }
+      // Fetch complete active learning plan, modules, and activities
+      const curriculumData = await getActiveCurriculumFoundation(supabase, user.id)
+      setCurriculum(curriculumData)
     } catch (err) {
-      console.error("Dashboard data load error:", err)
-      setErrorMessage("Failed to load dashboard data.")
+      console.error("[Dashboard] Load error:", err)
+      setErrorMessage("Failed to load dashboard workspace data.")
     } finally {
       setLoading(false)
     }
@@ -154,7 +147,7 @@ function DashboardContent() {
     }
   }
 
-  // Derive time-based greeting from current local time
+  // Derive time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return "Good morning"
@@ -167,7 +160,7 @@ function DashboardContent() {
       router.push(item.href)
       return
     }
-    setActiveToast(`${item.label} will be available in the upcoming phase.`)
+    setActiveToast(`${item.label} will be available in an upcoming phase.`)
     setTimeout(() => {
       setActiveToast(null)
     }, 2800)
@@ -191,31 +184,57 @@ function DashboardContent() {
     )
   }
 
-  // Derived real values
+  // Derived Real Learner Data
   const displayName = profile?.display_name || user?.user_metadata?.full_name || "Learner"
   const learningGoal = profile?.learning_goal || "Not set"
-  const avatarInitial = displayName.charAt(0).toUpperCase() || "L"
+  const availableDailyMinutes = profile?.available_daily_minutes || 45
 
-  // Position nodes spatially along the orbital ellipses
-  const orbitalNodes = curriculum?.modules.map((mod, idx) => {
-    const total = curriculum.modules.length
-    const angle = (idx / total) * Math.PI * 2 - Math.PI / 2
-    const rx = 150 + (idx % 2 === 0 ? 30 : -20)
-    const ry = 55 + (idx % 2 === 0 ? 15 : -10)
-    const cx = 300 + rx * Math.cos(angle)
-    const cy = 75 + ry * Math.sin(angle)
-    return {
-      ...mod,
-      cx,
-      cy,
-    }
-  }) || []
+  // Flatten all activities in module sequence order
+  const allActivities: FlattenedActivity[] = []
+  if (curriculum && curriculum.modules) {
+    curriculum.modules.forEach((mod) => {
+      if (mod.activities) {
+        mod.activities.forEach((act) => {
+          allActivities.push({
+            ...act,
+            module_title: mod.title,
+            module_sequence: mod.sequence_order,
+          })
+        })
+      }
+    })
+  }
+
+  // Progress metrics derived from real database completion state
+  const totalActivitiesCount = allActivities.length
+  const completedActivitiesCount = allActivities.filter((a) => a.is_completed).length
+  const completionPercentage = totalActivitiesCount > 0 ? Math.round((completedActivitiesCount / totalActivitiesCount) * 100) : 0
+
+  const totalModulesCount = curriculum?.modules.length || 0
+  const completedModulesCount = curriculum?.modules.filter((m) => m.status === "completed").length || 0
+
+  const totalEstimatedMins = allActivities.reduce((sum, a) => sum + (a.estimated_minutes || 20), 0)
+  const completedEstimatedMins = allActivities.filter((a) => a.is_completed).reduce((sum, a) => sum + (a.estimated_minutes || 20), 0)
+
+  // Current Active Task & Day
+  const firstIncomplete = allActivities.find((a) => !a.is_completed)
+  const activeDay = firstIncomplete ? (firstIncomplete.day_number || 1) : 1
+  const todaysBatch = allActivities.filter((a) => (a.day_number || 1) === activeDay)
+  const todaysRemaining = todaysBatch.filter((a) => !a.is_completed)
+
+  // Current Active Module
+  const currentModule = curriculum?.modules.find((m) => m.status === "in_progress") ||
+    curriculum?.modules.find((m) => m.status === "not_started") ||
+    curriculum?.modules[0]
+
+  const currentModActivities = currentModule?.activities || []
+  const currentModCompletedCount = currentModActivities.filter((a) => a.is_completed).length
 
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300">
       {/* Toast Notification */}
       {activeToast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-sm backdrop-blur-md">
+        <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-md backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
           <span>{activeToast}</span>
         </div>
       )}
@@ -228,14 +247,13 @@ function DashboardContent() {
         />
       )}
 
-      {/* LEFT COLUMN: Persistent Navigation */}
+      {/* LEFT COLUMN: Sidebar Navigation */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div>
-          {/* Brand Header */}
           <div className="flex items-center justify-between pb-5">
             <Link
               href="/"
@@ -252,7 +270,6 @@ function DashboardContent() {
             </button>
           </div>
 
-          {/* Navigation Links */}
           <nav className="space-y-0.5">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon
@@ -274,265 +291,375 @@ function DashboardContent() {
           </nav>
         </div>
 
-        {/* User Identity & Controls */}
         <div className="space-y-2.5 pt-3 border-t border-border/40">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">
-                {avatarInitial}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
-              </div>
-            </div>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Appearance</span>
             <ThemeToggle />
           </div>
-
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
-          >
-            <LogOut size={12} />
-            <span>Sign Out</span>
-          </button>
+          {isConfigured && user && (
+            <button
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
+              <LogOut size={13} />
+              <span>Sign out</span>
+            </button>
+          )}
         </div>
       </aside>
 
-      {/* CONTINUOUS WORKSPACE SURFACE */}
-      <div className="flex flex-1 flex-col lg:flex-row overflow-y-auto">
-        {/* CENTER COLUMN: Main Learning Workspace */}
-        <main className="flex-1 px-4 py-4 sm:px-6 md:px-8 xl:px-9">
-          <div className="max-w-3xl space-y-4">
-            {/* Mobile Top Bar */}
-            <div className="flex items-center justify-between pb-2 border-b border-border/40 lg:hidden">
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-foreground hover:bg-muted"
-                aria-label="Open navigation"
-              >
-                <Menu size={18} />
-              </button>
-              <span className="text-[11px] font-semibold tracking-[0.25em] text-foreground">
-                LEARNPILOT
-              </span>
-              <div className="w-10" />
-            </div>
-
-            {/* Top Compact Learner Greeting */}
-            <header className="space-y-0.5">
-              <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                Learner Workspace
-              </span>
-
-              <h1 className="font-serif text-2xl font-normal tracking-tight text-foreground md:text-3xl">
+      {/* RIGHT MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto px-4 py-8 md:px-10 lg:px-12">
+        <div className="mx-auto max-w-6xl space-y-8">
+          {/* 1. HEADER BAR */}
+          <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="rounded-lg border border-border/60 p-2 text-muted-foreground hover:text-foreground lg:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu size={18} />
+                </button>
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  LEARNER WORKSPACE
+                </span>
+              </div>
+              <h1 className="font-serif text-3xl font-normal tracking-tight text-foreground md:text-4xl mt-1">
                 {getGreeting()}, <span className="italic text-primary">{displayName}.</span>
               </h1>
-
-              <p className="text-xs text-muted-foreground">
-                Your learning goal: <span className="font-medium text-foreground">{learningGoal}</span>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Current Goal: <span className="font-medium text-foreground">{learningGoal}</span>
               </p>
-            </header>
+            </div>
 
-            <hr className="border-t border-border/40" />
-
-            {/* Error banner if any */}
-            {errorMessage && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                {errorMessage}
-              </div>
-            )}
-
-            {/* Compact Refined Orbital Trajectory Area */}
-            <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                  Your Learning Trajectory
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {curriculum ? `${curriculum.modules.length} Modules Active` : "Trajectory Anchored"}
-                </span>
-              </div>
-
-              <div className="relative flex h-44 w-full items-center justify-center overflow-hidden rounded-xl border border-border/30 bg-primary/[0.015]">
-                <svg className="absolute inset-0 h-full w-full" viewBox="0 0 600 150">
-                  <defs>
-                    <radialGradient id="compactOrbitalGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.22" />
-                      <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-                    </radialGradient>
-                    <linearGradient id="compactOrbitStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.35" />
-                      <stop offset="50%" stopColor="var(--primary)" stopOpacity="0.08" />
-                      <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.25" />
-                    </linearGradient>
-                  </defs>
-
-                  <circle cx="300" cy="75" r="65" fill="url(#compactOrbitalGlow)" />
-
-                  <ellipse
-                    cx="300"
-                    cy="75"
-                    rx="85"
-                    ry="35"
-                    fill="none"
-                    stroke="url(#compactOrbitStroke)"
-                    strokeWidth="1"
-                    strokeDasharray="3 3"
-                    className="animate-[spin_40s_linear_infinite] origin-center"
-                  />
-                  <ellipse
-                    cx="300"
-                    cy="75"
-                    rx="155"
-                    ry="58"
-                    fill="none"
-                    stroke="url(#compactOrbitStroke)"
-                    strokeWidth="1"
-                    className="animate-[spin_60s_linear_infinite] origin-center"
-                  />
-                  <ellipse
-                    cx="300"
-                    cy="75"
-                    rx="225"
-                    ry="72"
-                    fill="none"
-                    stroke="url(#compactOrbitStroke)"
-                    strokeWidth="1"
-                    strokeDasharray="2 5"
-                    className="animate-[spin_85s_linear_infinite] origin-center"
-                  />
-
-                  {/* Central Anchor Node */}
-                  <circle cx="300" cy="75" r="4" fill="var(--primary)" />
-                  <circle cx="300" cy="75" r="11" fill="none" stroke="var(--primary)" strokeWidth="1" strokeOpacity="0.4" />
-
-                  {/* Real Database-backed Module Nodes */}
-                  {orbitalNodes.map((node) => (
-                    <g key={node.id} className="group cursor-pointer">
-                      <circle cx={node.cx} cy={node.cy} r="6" fill="var(--background)" stroke="var(--primary)" strokeWidth="2" />
-                      <circle cx={node.cx} cy={node.cy} r="2.5" fill="var(--primary)" />
-                      <text
-                        x={node.cx}
-                        y={node.cy - 10}
-                        textAnchor="middle"
-                        className="fill-foreground text-[9px] font-mono font-semibold tracking-wider"
-                      >
-                        {String(node.sequence_order).padStart(2, "0")}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
-
-                {/* Spatial Anchor Label & Action Entry Point */}
-                <div className="relative z-10 text-center px-4 space-y-1">
-                  <span className="text-[9px] font-medium uppercase tracking-[0.25em] text-primary">
-                    Trajectory Anchored To
-                  </span>
-                  <p className="font-serif text-sm italic text-foreground">
-                    {learningGoal}
-                  </p>
-
-                  {!curriculum ? (
-                    <div className="pt-1">
-                      <button
-                        onClick={handleGeneratePlan}
-                        disabled={generating}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary transition-all hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
-                      >
-                        {generating ? (
-                          <>
-                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            <span>Generating Orbit...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Generate my learning path</span>
-                            <ArrowRight size={12} />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="pt-1">
-                      <Link
-                        href="/path"
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-primary transition-opacity hover:opacity-80"
-                      >
-                        <span>View full curriculum ({curriculum.modules.length} modules)</span>
-                        <ArrowUpRight size={12} />
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          </div>
-        </main>
-
-        {/* RIGHT COLUMN: Compact Contextual Learning Intelligence */}
-        <aside className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-border/40 px-5 py-5 space-y-5 bg-background/40">
-          {/* Section: Today's Journey */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
-              Today's Journey
-            </span>
-            <p className="text-xs font-medium text-foreground flex items-center justify-between">
-              <span>{profile?.available_daily_minutes || 45} min daily budget</span>
-            </p>
-            <p className="text-[11px] leading-relaxed text-muted-foreground/80">
-              {curriculum?.modules[0]
-                ? `Next focus: ${curriculum.modules[0].title}`
-                : "Your personalized daily learning session based on your path."}
-            </p>
-            <div className="pt-1">
+            <div className="flex items-center gap-3 self-start md:self-auto">
+              <Link
+                href="/settings"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-xs transition-colors hover:text-foreground"
+              >
+                <Settings size={14} />
+                <span>Preferences</span>
+              </Link>
               <Link
                 href="/journey"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
               >
-                <span>Continue Journey</span>
-                <ArrowRight size={12} />
+                <PlayCircle size={14} />
+                <span>Continue Today's Journey</span>
               </Link>
             </div>
-          </div>
+          </header>
 
-          <hr className="border-t border-border/40" />
-
-          {/* Section: Up Next */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
-              Up Next
-            </span>
-            <p className="text-xs font-medium text-foreground">
-              {curriculum?.modules[1]
-                ? `Module 02 — ${curriculum.modules[1].title}`
-                : "Curriculum generation"}
-            </p>
-            <p className="text-[11px] leading-relaxed text-muted-foreground/80">
-              {curriculum?.modules[1]
-                ? curriculum.modules[1].description
-                : "Preparing your learning modules and checkpoints."}
-            </p>
-          </div>
-
-          <hr className="border-t border-border/40" />
-
-          {/* Section: Profile */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
-              Profile
-            </span>
-            <div>
-              <Link
-                href="/onboarding"
-                className="inline-flex items-center gap-1 text-xs text-primary transition-opacity hover:opacity-80"
-              >
-                <span>Edit learning preferences</span>
-                <ArrowUpRight size={12} />
-              </Link>
+          {/* ERROR ALERT */}
+          {errorMessage && (
+            <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-xs text-destructive">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{errorMessage}</span>
             </div>
-          </div>
-        </aside>
-      </div>
+          )}
+
+          {/* UNINITIALIZED PLAN BANNER */}
+          {(!curriculum || !curriculum.plan) && (
+            <div className="rounded-2xl border border-border/50 bg-card/60 p-8 text-center backdrop-blur-md space-y-4 max-w-xl mx-auto my-6 shadow-sm">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Compass size={24} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-serif text-lg font-normal text-foreground">
+                  Your personalized Learning Path awaits.
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                  Generate your tailored curriculum based on your goal ("{learningGoal}") and study budget ({availableDailyMinutes} min/day).
+                </p>
+              </div>
+              <button
+                onClick={handleGeneratePlan}
+                disabled={generating}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {generating ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                    <span>Generating Learning Path...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    <span>Generate Learning Path Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {curriculum && curriculum.plan && (
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* LEFT & MIDDLE COLUMNS (2 Spans) */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* 2. TODAY'S FOCUS CARD */}
+                <div className="rounded-2xl border border-border/50 bg-card/60 p-6 backdrop-blur-md space-y-5 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
+                    <div>
+                      <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                        TODAY'S FOCUS • DAY {activeDay}
+                      </span>
+                      <h2 className="font-serif text-xl font-normal text-foreground mt-0.5">
+                        {firstIncomplete ? firstIncomplete.title : "All activities for today completed!"}
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-mono text-muted-foreground">
+                        <Clock size={12} className="inline mr-1 text-primary" />
+                        {availableDailyMinutes}m daily budget
+                      </span>
+                    </div>
+                  </div>
+
+                  {firstIncomplete ? (
+                    <div className="space-y-4">
+                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-mono text-[10px] text-primary uppercase font-semibold">Active Task</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">{firstIncomplete.estimated_minutes || 20} mins</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground">{firstIncomplete.title}</p>
+                        <p className="text-xs text-muted-foreground">Module: {firstIncomplete.module_title}</p>
+                      </div>
+
+                      {todaysRemaining.length > 1 && (
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                            Remaining Today ({todaysRemaining.length - 1} more tasks)
+                          </span>
+                          <div className="space-y-1.5">
+                            {todaysRemaining.slice(1, 4).map((act) => (
+                              <div
+                                key={act.id}
+                                className="flex items-center justify-between rounded-lg border border-border/30 bg-background/50 px-3 py-2 text-xs"
+                              >
+                                <span className="truncate text-foreground">{act.title}</span>
+                                <span className="font-mono text-[10px] text-muted-foreground shrink-0">{act.estimated_minutes || 20}m</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 text-center space-y-2">
+                      <Trophy size={28} className="mx-auto text-emerald-500" />
+                      <p className="text-sm font-medium text-foreground">You've completed all tasks for Day {activeDay}!</p>
+                      <p className="text-xs text-muted-foreground">Great work today. You can review your path or explore courses.</p>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <Link
+                      href="/journey"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                    >
+                      <span>Open Daily Journey Workspace</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* 3. OVERALL PROGRESS CARD */}
+                <div className="rounded-2xl border border-border/50 bg-card/60 p-6 backdrop-blur-md space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 size={16} className="text-primary" />
+                      <h3 className="font-serif text-lg font-normal text-foreground">Curriculum Progress</h3>
+                    </div>
+                    <span className="font-mono text-sm font-semibold text-primary">{completionPercentage}%</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted/40">
+                      <div
+                        className="h-full bg-primary transition-all duration-500"
+                        style={{ width: `${completionPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    <div className="rounded-xl border border-border/40 bg-background/50 p-3 text-center space-y-0.5">
+                      <span className="font-mono text-lg font-semibold text-foreground">{completedActivitiesCount}/{totalActivitiesCount}</span>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Activities</p>
+                    </div>
+                    <div className="rounded-xl border border-border/40 bg-background/50 p-3 text-center space-y-0.5">
+                      <span className="font-mono text-lg font-semibold text-foreground">{completedModulesCount}/{totalModulesCount}</span>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Modules</p>
+                    </div>
+                    <div className="rounded-xl border border-border/40 bg-background/50 p-3 text-center space-y-0.5">
+                      <span className="font-mono text-lg font-semibold text-foreground">{completedEstimatedMins}m</span>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Study Time</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. CURRENT LEARNING MODULE CARD */}
+                {currentModule && (
+                  <div className="rounded-2xl border border-border/50 bg-card/60 p-6 backdrop-blur-md space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                          CURRENT MODULE • {currentModule.sequence_order} OF {totalModulesCount}
+                        </span>
+                        <h3 className="font-serif text-lg font-normal text-foreground mt-0.5">
+                          {currentModule.title}
+                        </h3>
+                      </div>
+                      <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-mono text-primary uppercase">
+                        {currentModule.status.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    {currentModule.description && (
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {currentModule.description}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2 text-xs">
+                      <span className="text-muted-foreground">
+                        Module Progress: <strong className="text-foreground">{currentModCompletedCount}/{currentModActivities.length} activities</strong>
+                      </span>
+                      <Link
+                        href="/path"
+                        className="inline-flex items-center gap-1 font-medium text-primary hover:underline text-xs"
+                      >
+                        <span>View Module in Path</span>
+                        <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT COLUMN (1 Span) */}
+              <div className="space-y-6">
+                {/* 5. QUICK ACTIONS GRID */}
+                <div className="rounded-2xl border border-border/50 bg-card/60 p-6 backdrop-blur-md space-y-4 shadow-sm">
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                    QUICK ACTIONS
+                  </span>
+
+                  <div className="grid gap-2.5">
+                    <Link
+                      href="/journey"
+                      className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Calendar size={15} className="text-primary" />
+                        <span className="font-medium text-foreground">Daily Journey</span>
+                      </div>
+                      <ArrowRight size={13} className="text-muted-foreground" />
+                    </Link>
+
+                    <Link
+                      href="/path"
+                      className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Compass size={15} className="text-primary" />
+                        <span className="font-medium text-foreground">Learning Path</span>
+                      </div>
+                      <ArrowRight size={13} className="text-muted-foreground" />
+                    </Link>
+
+                    <Link
+                      href="/ai-coach"
+                      className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Bot size={15} className="text-primary" />
+                        <span className="font-medium text-foreground">AI Coach</span>
+                      </div>
+                      <ArrowRight size={13} className="text-muted-foreground" />
+                    </Link>
+
+                    <Link
+                      href="/courses"
+                      className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <BookOpen size={15} className="text-primary" />
+                        <span className="font-medium text-foreground">Course Catalog</span>
+                      </div>
+                      <ArrowRight size={13} className="text-muted-foreground" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* 6. AI COACH CARD */}
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-md space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Bot size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-serif text-sm font-medium text-foreground">Personal AI Coach</h4>
+                      <p className="text-[11px] text-muted-foreground">Personalized learning guidance</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Have questions about your current task or concepts in "{currentModule?.title || 'your path'}"? Your AI Coach is grounded in your active curriculum.
+                  </p>
+
+                  <Link
+                    href="/ai-coach"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90"
+                  >
+                    <Sparkles size={14} />
+                    <span>Ask Your AI Coach</span>
+                  </Link>
+                </div>
+
+                {/* 7. PROFILE & PREFERENCES CARD */}
+                <div className="rounded-2xl border border-border/50 bg-card/60 p-6 backdrop-blur-md space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <User size={15} className="text-primary" />
+                      <h4 className="font-serif text-sm font-medium text-foreground">Learner Profile</h4>
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">{LEVEL_LABELS[profile?.current_level || "beginner"]}</span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Goal:</span>
+                      <span className="font-medium text-foreground text-right">{profile?.learning_goal || "Not set"}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Daily Budget:</span>
+                      <span className="font-mono font-medium text-foreground">{availableDailyMinutes} min / day</span>
+                    </div>
+                    {profile?.target_date && (
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Target Horizon:</span>
+                        <span className="font-mono text-foreground">{new Date(profile.target_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Link
+                    href="/settings"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-background px-3.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/40"
+                  >
+                    <Settings size={13} />
+                    <span>Edit Learning Preferences</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   )
 }
