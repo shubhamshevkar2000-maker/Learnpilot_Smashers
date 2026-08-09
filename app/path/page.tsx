@@ -86,10 +86,17 @@ const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
   { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path", active: true },
+<<<<<<< HEAD
   { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "#" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
+=======
+  { id: "courses", label: "Courses", icon: BookOpen, href: "#" },
+  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
+  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "#" },
+  { id: "progress", label: "Progress", icon: BarChart3, href: "#" },
+>>>>>>> origin/feature/ai-coach
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
   { id: "settings", label: "Settings", icon: Settings, href: "#" },
 ]
