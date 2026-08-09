@@ -4,7 +4,7 @@ import Groq from "groq-sdk"
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify Groq API Key on server side
+    // 1. Server-side Groq API Key check
     const groqApiKey = process.env.GROQ_API_KEY
     if (!groqApiKey || groqApiKey.trim() === "" || groqApiKey.includes("your-groq-key")) {
       return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. Authenticate user from Supabase session
+    // 2. Strict Supabase session authentication
     const supabase = await createClient()
     const {
       data: { user },
@@ -27,13 +27,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3. Parse request payload
+    // 3. Parse and validate message payload
     let body: any
     try {
       body = await request.json()
     } catch {
       return NextResponse.json(
-        { error: "Invalid JSON request payload." },
+        { error: "Invalid request format." },
         { status: 400 }
       )
     }
@@ -46,64 +46,95 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const lastMessage = messages[messages.length - 1]
-    if (!lastMessage || !lastMessage.content || typeof lastMessage.content !== "string" || !lastMessage.content.trim()) {
+    const lastMsg = messages[messages.length - 1]
+    if (!lastMsg || typeof lastMsg.content !== "string" || !lastMsg.content.trim()) {
       return NextResponse.json(
         { error: "Message content cannot be empty." },
         { status: 400 }
       )
     }
 
-    // 4. Retrieve real learner profile context
+    // 4. Retrieve authenticated learner's profile strictly by auth.uid()
     const { data: profile, error: profileError } = await supabase
       .from("learner_profiles")
       .select("display_name, learning_goal, desired_outcome, current_level, available_daily_minutes, target_date")
       .eq("user_id", user.id)
       .maybeSingle()
 
-    if (profileError || !profile) {
+    if (profileError) {
+      return NextResponse.json(
+        { error: "Unable to retrieve learner profile. Please try again." },
+        { status: 500 }
+      )
+    }
+
+    if (!profile) {
       return NextResponse.json(
         { error: "Learner profile not found. Please complete onboarding first." },
         { status: 404 }
       )
     }
 
-    // 5. Construct System Prompt using real profile details
-    const displayName = profile.display_name || "Learner"
-    const learningGoal = profile.learning_goal || "Mastering target skill"
-    const desiredOutcome = profile.desired_outcome || "Achieving mastery"
-    const currentLevel = profile.current_level || "unknown"
-    const dailyMinutes = profile.available_daily_minutes ? `${profile.available_daily_minutes} minutes/day` : "Not specified"
-    const targetDate = profile.target_date || "Not set"
+    // 5. Construct deeply personalized system context (Phase 2)
+    const displayName = (profile.display_name || "Learner").trim().slice(0, 100)
+    const learningGoal = (profile.learning_goal || "General Skill Mastery").trim().slice(0, 300)
+    const desiredOutcome = (profile.desired_outcome || "Achieve proficiency").trim().slice(0, 300)
+    const currentLevel = (profile.current_level || "unknown").toLowerCase()
+    const dailyMinutes = profile.available_daily_minutes ? Math.min(Math.max(profile.available_daily_minutes, 5), 480) : 30
+    const targetDate = profile.target_date ? String(profile.target_date).slice(0, 20) : "Not set"
 
-    const systemPrompt = `You are the LearnPilot AI Coach, an expert, engaging, and practical learning guide.
+    // Depth & Pacing guidance based on current_level and available_daily_minutes
+    let depthGuidance = ""
+    if (currentLevel === "beginner" || currentLevel === "basics") {
+      depthGuidance = "Use clear, plain language with simple step-by-step analogies. Avoid obscure jargon unless explained immediately."
+    } else if (currentLevel === "intermediate") {
+      depthGuidance = "Provide practical, technical explanations with real-world context and best practices. Balance theory with hands-on application."
+    } else if (currentLevel === "advanced") {
+      depthGuidance = "Deliver concise, high-level, architecture-focused or advanced technical insights. Dive directly into nuance and optimization."
+    } else {
+      depthGuidance = "Adapt explanation depth dynamically based on the complexity of the learner's query."
+    }
 
-LEARNER PROFILE CONTEXT (REAL DATA):
+    let pacingGuidance = ""
+    if (dailyMinutes <= 20) {
+      pacingGuidance = `The learner has only ${dailyMinutes} minutes/day. Keep study recommendations focused on single, micro-learning topics.`
+    } else if (dailyMinutes <= 45) {
+      pacingGuidance = `The learner has ${dailyMinutes} minutes/day. Recommend structured 30-40 minute focused study blocks.`
+    } else {
+      pacingGuidance = `The learner has ${dailyMinutes} minutes/day available. Suggest deeper hands-on practice or mini-projects.`
+    }
+
+    const systemPrompt = `You are the LearnPilot AI Coach, an expert, personalized, and practical AI learning guide.
+
+AUTHENTICATED LEARNER CONTEXT:
 - Name: ${displayName}
-- Primary Learning Goal: ${learningGoal}
+- Primary Goal: ${learningGoal}
 - Desired Outcome: ${desiredOutcome}
 - Current Level: ${currentLevel}
-- Daily Study Time Constraint: ${dailyMinutes}
+- Available Daily Time: ${dailyMinutes} minutes/day
 - Target Goal Date: ${targetDate}
 
-COACHING DIRECTIVES & BEHAVIOR:
-1. Tailor all explanations, study strategies, and responses to the learner's current level (${currentLevel}) and goal (${learningGoal}).
-2. When suggesting study tasks or exercises, strictly respect their daily time constraint of ${dailyMinutes}.
-3. Keep answers clear, well-structured, practical, and direct. Avoid unnecessary generic fluff.
-4. If the learner's query is broad or ambiguous, give a concise helpful explanation and ask a focused follow-up question.
-5. GROUND TRUTH RULE: Do NOT invent completed lessons, assessment scores, or progress percentages that are not provided in the prompt context. Only reference information explicitly known.
-6. Address ${displayName} directly as their supportive personal AI learning coach.`
+PERSONALIZED COACHING DIRECTIVES:
+1. ADAPTATION: ${depthGuidance}
+2. TIME CONSTRAINT: ${pacingGuidance} Never recommend study routines or schedules exceeding ${dailyMinutes} minutes per day.
+3. GOAL ORIENTATION: Relate concepts and advice directly to their primary goal ("${learningGoal}") and desired outcome ("${desiredOutcome}").
+4. BEHAVIOR: Be supportive, structured, direct, and actionable. Avoid generic fluff or repetitive boilerplate disclaimers.
+5. AMBIGUITY: If a learner's query is broad, give a clear initial answer and ask 1 focused follow-up question.
+6. GROUND TRUTH: Do NOT invent completed lessons, test scores, or progress percentages. Only reference facts provided in this prompt.
+7. Addressing: Address ${displayName} directly as their personal AI coach.`
 
-    // 6. Format conversation history for Groq SDK
+    // 6. Format recent message history (prevent context overflow)
+    const formattedHistory = messages.slice(-8).map((m: { role: string; content: string }) => ({
+      role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+      content: String(m.content).trim().slice(0, 2000),
+    }))
+
     const groqMessages = [
       { role: "system", content: systemPrompt },
-      ...messages.slice(-10).map((m: { role: string; content: string }) => ({
-        role: m.role === "user" ? ("user" as const) : ("assistant" as const),
-        content: String(m.content).trim(),
-      })),
+      ...formattedHistory,
     ]
 
-    // 7. Invoke Groq API
+    // 7. Call Groq API via Server SDK
     const groq = new Groq({ apiKey: groqApiKey })
     const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
 
@@ -114,22 +145,22 @@ COACHING DIRECTIVES & BEHAVIOR:
       max_tokens: 1024,
     })
 
-    const aiResponse = completion.choices[0]?.message?.content
+    const aiAnswer = completion.choices[0]?.message?.content
 
-    if (!aiResponse) {
+    if (!aiAnswer) {
       return NextResponse.json(
         { error: "AI Coach was unable to generate a response. Please try again." },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ response: aiResponse })
+    return NextResponse.json({ response: aiAnswer })
   } catch (error: any) {
-    console.error("AI Coach API error:", error?.message || error)
+    console.error("AI Coach Phase 2 API error:", error?.message || error)
 
     if (error?.status === 429 || error?.message?.includes("rate limit")) {
       return NextResponse.json(
-        { error: "The AI Coach is experiencing high traffic right now. Please wait a moment and try again." },
+        { error: "The AI Coach is receiving high traffic right now. Please wait a moment and try again." },
         { status: 429 }
       )
     }
