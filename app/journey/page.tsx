@@ -24,11 +24,15 @@ import {
   Calendar,
   AlertCircle,
   Trophy,
+  FilePlus,
+  Tag,
+  Plus,
 } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { createClient } from "@/lib/supabase/client"
+import { createNote } from "@/lib/services/notes-service"
 import {
   getActiveCurriculumFoundation,
   completeActivity,
@@ -58,11 +62,11 @@ const NAV_ITEMS: NavItem[] = [
   { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey", active: true },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
   { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "#" },
-  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "#" },
-  { id: "progress", label: "Progress", icon: BarChart3, href: "#" },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
-  { id: "settings", label: "Settings", icon: Settings, href: "#" },
+  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
+  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
+  { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
+  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 
 export interface FlattenedActivity extends ModuleActivity {
@@ -96,6 +100,77 @@ function DailyJourneyContent() {
   const [selectedActivity, setSelectedActivity] = useState<FlattenedActivity | null>(null)
   const [inProgressIds, setInProgressIds] = useState<Set<string>>(new Set())
   const [completingId, setCompletingId] = useState<string | null>(null)
+
+  // Mark Complete & Add Note modal state
+  const [noteModalActivity, setNoteModalActivity] = useState<FlattenedActivity | null>(null)
+  const [noteModalTitle, setNoteModalTitle] = useState("")
+  const [noteModalContent, setNoteModalContent] = useState("")
+  const [noteModalTagInput, setNoteModalTagInput] = useState("")
+  const [noteModalTags, setNoteModalTags] = useState<string[]>(["journey"])
+  const [isSavingNoteAndComplete, setIsSavingNoteAndComplete] = useState(false)
+
+  const handleOpenCompleteWithNote = (act: FlattenedActivity) => {
+    setNoteModalActivity(act)
+    setNoteModalTitle(`Key takeaways: ${act.title}`)
+    setNoteModalContent("")
+    setNoteModalTags(["journey"])
+    setNoteModalTagInput("")
+  }
+
+  const handleSaveNoteAndComplete = async () => {
+    if (!user || !noteModalActivity || isSavingNoteAndComplete) return
+    setIsSavingNoteAndComplete(true)
+
+    try {
+      // 1. Create the note in Supabase & LocalStorage
+      await createNote(supabase, user.id, {
+        title: noteModalTitle.trim() || `Note: ${noteModalActivity.title}`,
+        content: noteModalContent,
+        tags: noteModalTags,
+        source_type: "journey",
+        source_id: noteModalActivity.id,
+        source_title: noteModalActivity.title,
+      })
+
+      // 2. Complete the activity
+      const success = await completeActivity(supabase, user.id, noteModalActivity.id, noteModalActivity.module_id)
+
+      if (success) {
+        setCurriculum((prev) => {
+          if (!prev) return null
+          const updatedModules = prev.modules.map((m) => {
+            if (m.id !== noteModalActivity.module_id) return m
+            const updatedActs = (m.activities || []).map((a) =>
+              a.id === noteModalActivity.id ? { ...a, is_completed: true, completed_at: new Date().toISOString() } : a
+            )
+            return { ...m, activities: updatedActs }
+          })
+          return { ...prev, modules: updatedModules }
+        })
+
+        setInProgressIds((prev) => {
+          const next = new Set(prev)
+          next.delete(noteModalActivity.id)
+          return next
+        })
+
+        if (selectedActivity?.id === noteModalActivity.id) {
+          setSelectedActivity(null)
+        }
+
+        setNoteModalActivity(null)
+        setActiveToast(`Completed "${noteModalActivity.title}" & saved note to your Notebook!`)
+        setTimeout(() => setActiveToast(null), 3500)
+      } else {
+        setErrorMessage("Saved note, but failed to update activity completion. Please try again.")
+      }
+    } catch (err) {
+      console.error("Error saving note and completing activity:", err)
+      setErrorMessage("Could not complete activity and save note.")
+    } finally {
+      setIsSavingNoteAndComplete(false)
+    }
+  }
 
   // Derive Time of Day Greeting
   const getGreeting = () => {
@@ -640,7 +715,8 @@ function DailyJourneyContent() {
                                 <button
                                   onClick={() => handleMarkComplete(act)}
                                   disabled={isCompleting}
-                                  className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                                  title="Mark activity as complete"
                                 >
                                   {isCompleting ? (
                                     <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -650,6 +726,16 @@ function DailyJourneyContent() {
                                       <span>Complete</span>
                                     </>
                                   )}
+                                </button>
+
+                                <button
+                                  onClick={() => handleOpenCompleteWithNote(act)}
+                                  disabled={isCompleting}
+                                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                                  title="Complete activity and capture learning notes"
+                                >
+                                  <FilePlus size={13} />
+                                  <span>Complete & Add Note</span>
                                 </button>
                               </div>
                             )}
@@ -718,7 +804,7 @@ function DailyJourneyContent() {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setSelectedActivity(null)}
                 className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -727,19 +813,153 @@ function DailyJourneyContent() {
               </button>
 
               {!selectedActivity.is_completed && (
-                <button
-                  onClick={() => handleMarkComplete(selectedActivity)}
-                  disabled={completingId === selectedActivity.id}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
-                >
-                  {completingId === selectedActivity.id ? (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <CheckCircle2 size={15} />
-                  )}
-                  <span>Mark as Complete</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => handleMarkComplete(selectedActivity)}
+                    disabled={completingId === selectedActivity.id}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/30 px-3.5 py-2 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                  >
+                    {completingId === selectedActivity.id ? (
+                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <CheckCircle2 size={14} />
+                    )}
+                    <span>Mark Complete</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const act = selectedActivity
+                      setSelectedActivity(null)
+                      handleOpenCompleteWithNote(act)
+                    }}
+                    disabled={completingId === selectedActivity.id}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    <FilePlus size={14} />
+                    <span>Complete & Add Note</span>
+                  </button>
+                </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MARK COMPLETE & ADD NOTE DIALOG MODAL */}
+      {noteModalActivity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg rounded-2xl border border-border/80 bg-card p-6 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setNoteModalActivity(null)}
+              className="absolute top-4 right-4 rounded-full p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1 pr-6">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-primary font-semibold">
+                  Daily Journey Note
+                </span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                  {noteModalActivity.title}
+                </span>
+              </div>
+              <h3 className="font-serif text-xl font-normal text-foreground">
+                Capture Your Learning Insights
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
+                  Note Title
+                </label>
+                <input
+                  type="text"
+                  value={noteModalTitle}
+                  onChange={(e) => setNoteModalTitle(e.target.value)}
+                  placeholder="Note title..."
+                  className="w-full rounded-xl border border-border/50 bg-background px-3.5 py-2 text-xs font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
+                  Learning Content & Key Takeaways
+                </label>
+                <textarea
+                  rows={5}
+                  value={noteModalContent}
+                  onChange={(e) => setNoteModalContent(e.target.value)}
+                  placeholder="Record important concepts, formulas, code snippets, or reflections learned during this activity..."
+                  className="w-full rounded-xl border border-border/50 bg-background p-3 text-xs leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+                  <Tag size={12} />
+                  <span>Tags</span>
+                </label>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {noteModalTags.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                    >
+                      #{t}
+                      <button
+                        onClick={() => setNoteModalTags(noteModalTags.filter((x) => x !== t))}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X size={10} />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={noteModalTagInput}
+                    onChange={(e) => setNoteModalTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault()
+                        const clean = noteModalTagInput.trim().replace(/^#/, "")
+                        if (clean && !noteModalTags.includes(clean)) {
+                          setNoteModalTags([...noteModalTags, clean])
+                          setNoteModalTagInput("")
+                        }
+                      }
+                    }}
+                    placeholder="Add tag (Enter)..."
+                    className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none py-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setNoteModalActivity(null)}
+                className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSaveNoteAndComplete}
+                disabled={isSavingNoteAndComplete}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {isSavingNoteAndComplete ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <CheckCircle2 size={15} />
+                )}
+                <span>Save Note & Complete Activity</span>
+              </button>
             </div>
           </div>
         </div>

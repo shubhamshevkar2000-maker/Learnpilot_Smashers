@@ -244,6 +244,47 @@ export interface Database {
           updated_at?: string
         }
       }
+      learner_notes: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          content: string
+          tags: string[]
+          source_type: string
+          source_id: string | null
+          source_title: string | null
+          is_pinned: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string
+          content?: string
+          tags?: string[]
+          source_type?: string
+          source_id?: string | null
+          source_title?: string | null
+          is_pinned?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          content?: string
+          tags?: string[]
+          source_type?: string
+          source_id?: string | null
+          source_title?: string | null
+          is_pinned?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

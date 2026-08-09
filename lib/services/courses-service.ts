@@ -30,6 +30,7 @@ export interface Course {
   category: string
   difficulty: CourseDifficulty
   estimated_minutes: number
+  domain: "data_analytics" | "full_stack" | "ui_ux" | "devops" | "cybersecurity" | "general"
   isRecommended?: boolean
   recommendation_reason?: string
   lessons: CourseLesson[]
@@ -44,14 +45,436 @@ export interface UserCourseProgress {
 }
 
 // ============================================================================
-// STANDALONE DEEP COURSE CATALOG WITH REAL EDUCATIONAL CONTENT
+// DOMAIN 1: DATA ANALYTICS & DATA SCIENCE COURSES
 // ============================================================================
-export const CONST_COURSES: Course[] = [
+export const DATA_ANALYTICS_COURSES: Course[] = [
+  {
+    id: "course-py-data-analysis",
+    title: "Python for Data Analysis & Pandas",
+    description: "Master Python data structures, Pandas DataFrames, NumPy array vectorization, data cleaning, and exploratory data analysis (EDA).",
+    category: "data_science",
+    domain: "data_analytics",
+    difficulty: "Beginner",
+    estimated_minutes: 150,
+    lessons: [
+      {
+        id: "py-data-l1",
+        course_id: "course-py-data-analysis",
+        title: "Python Data Structures & NumPy Vectorization",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Understand memory layout of Python lists versus NumPy vectorized N-dimensional arrays for high-performance data computation.",
+        concept_guide: `Python is the leading language for Data Analytics and Data Science. Standard Python lists store pointers to objects scattered across system memory, introducing iteration overhead during mathematical calculations.
+
+NumPy (Numerical Python) introduces contiguous memory array structures (\`ndarray\`) that execute operations in compiled C routines. Vectorization allows applying mathematical operations across entire datasets simultaneously without explicit slow Python \`for\` loops!`,
+        code_example: `import numpy as np
+
+# Create 1D array of sales figures
+sales = np.array([1200, 1450, 980, 2100, 1750])
+
+# Vectorized operation: 10% tax calculation on all sales
+tax_amount = sales * 0.10
+total_sales = sales + tax_amount
+
+print(f"Mean Sale: USD {np.mean(sales):.2f}")
+print(f"Total Revenue with Tax: USD {np.sum(total_sales):.2f}")`,
+        code_explanation: "Demonstrates vectorized element-wise multiplication and summary statistical operations (mean, sum) using NumPy.",
+        practical_exercise: "Create a NumPy array containing monthly customer acquisition counts for 12 months. Calculate total annual acquisitions, monthly average, and find months exceeding 1,000 customers using boolean indexing.",
+        checkpoint_question: "Why is NumPy array vectorization significantly faster than standard Python list iteration?",
+        checkpoint_options: [
+          "NumPy automatically uploads data to remote GPU cloud servers.",
+          "NumPy stores homogeneous data in contiguous memory blocks and executes vectorized operations in compiled C routines.",
+          "Standard Python lists encrypt variables during loops.",
+          "NumPy converts numbers into text strings before computing."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Contiguous memory layout and compiled C vectorization allow NumPy to execute array operations without loop interpreter overhead."
+      },
+      {
+        id: "py-data-l2",
+        course_id: "course-py-data-analysis",
+        title: "Pandas DataFrames & Data Manipulation",
+        lesson_type: "exercise",
+        sequence_order: 2,
+        estimated_minutes: 25,
+        objective: "Load structured CSV datasets into Pandas DataFrames, inspect schema metadata, and query rows using loc and iloc.",
+        concept_guide: `Pandas is the core library for tabular data manipulation. A DataFrame is a two-dimensional labeled data structure with columns of potentially different types, similar to a spreadsheet or SQL table.
+
+Indexing Methods:
+- \`df.loc[row_indexer, col_indexer]\`: Label-based indexing using row index values and column header names.
+- \`df.iloc[row_indexer, col_indexer]\`: Positional integer-based indexing (0 to N-1).
+
+Filtering Data:
+Pandas uses boolean indexing (\`df[df['age'] > 30]\`) to extract subsets meeting explicit filtering criteria.`,
+        code_example: `import pandas as pd
+
+# Read customer transaction dataset
+df = pd.read_csv('transactions.csv')
+
+# Inspect top 5 rows and summary statistics
+print(df.head())
+print(df.info())
+
+# Filter high-value customer transactions
+high_value = df[df['amount'] >= 500.0]
+regional_summary = high_value.groupby('region')['amount'].sum()
+
+print(regional_summary)`,
+        code_explanation: "Loads a CSV file, inspects data types, performs boolean filtering for transactions >= $500, and aggregates totals by region.",
+        practical_exercise: "Load a sample sales DataFrame, drop rows with missing values, filter orders placed in 2026, and calculate total revenue grouped by product category.",
+        checkpoint_question: "Which Pandas method is used for label-based row and column selection?",
+        checkpoint_options: [
+          "df.iloc[]",
+          "df.loc[]",
+          "df.select[]",
+          "df.filter_by[]"
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "df.loc[] performs label-based indexing using explicit index labels and column names."
+      },
+      {
+        id: "py-data-l3",
+        course_id: "course-py-data-analysis",
+        title: "Data Cleaning, Imputation & Reshaping",
+        lesson_type: "concept",
+        sequence_order: 3,
+        estimated_minutes: 25,
+        objective: "Handle missing null values (NaN), detect duplicate records, retype data columns, and apply pivot tables.",
+        concept_guide: `Real-world raw data is messy, incomplete, and noisy. Data Cleaning typically consumes 60-80% of a Data Analyst's daily time budget!
+
+Missing Value Strategies:
+1. Drop Missing Data (\`dropna()\`) when missingness is completely random and small (< 5%).
+2. Impute Values (\`fillna()\`) using column mean, median (for skewed distributions), or mode for categorical features.
+
+Duplicate Handling: \`df.drop_duplicates()\` ensures transactional uniqueness.
+Pivot Tables: \`df.pivot_table()\` reshapes long format data into wide summary matrices.`,
+        code_example: `# Check missing value counts
+print(df.isnull().sum())
+
+# Fill missing numerical income with median value
+median_income = df['income'].median()
+df['income'] = df['income'].fillna(median_income)
+
+# Remove duplicate customer records
+df_clean = df.drop_duplicates(subset=['customer_id'])
+
+# Create pivot table comparing segment vs churn rate
+pivot = df_clean.pivot_table(index='segment', values='churned', aggfunc='mean')
+print(pivot)`,
+        code_explanation: "Demonstrates checking null counts, median imputation, removing duplicates based on unique customer ID, and pivoting summary statistics.",
+        practical_exercise: "Given an employee dataset with null salary entries, impute missing salaries using department median values and output a summary pivot table of average tenure by department.",
+        checkpoint_question: "Why is median imputation preferred over mean imputation for skewed income datasets containing outliers?",
+        checkpoint_options: [
+          "Because mean imputation deletes the column automatically.",
+          "Because extreme outlier values heavily distort the mean, while the median reflects the robust central tendency.",
+          "Because median works only on text strings.",
+          "Because mean imputation requires installing extra R libraries."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "The median is robust against extreme outliers that skew arithmetic mean calculations."
+      },
+      {
+        id: "py-data-l4",
+        course_id: "course-py-data-analysis",
+        title: "Exploratory Data Analysis (EDA) Capstone Project",
+        lesson_type: "project",
+        sequence_order: 4,
+        estimated_minutes: 30,
+        objective: "Perform an end-to-end Exploratory Data Analysis workflow to uncover business insights and anomaly patterns.",
+        concept_guide: `Exploratory Data Analysis (EDA) is an iterative approach to analyzing datasets to summarize main statistical characteristics, uncover underlying patterns, spot anomalies, and test hypotheses before building predictive models or executive dashboards.`,
+        code_example: `# Exploratory Summary Pipeline
+def run_eda(dataframe):
+    summary = {
+        "shape": dataframe.shape,
+        "missing_pct": (dataframe.isnull().sum() / len(dataframe)) * 100,
+        "numeric_stats": dataframe.describe()
+    }
+    return summary`,
+        code_explanation: "Modular EDA helper returning dataset shape, missing value percentages, and key statistical quantiles.",
+        practical_exercise: "Perform EDA on a retail sales dataset to identify top 3 revenue-generating product lines and seasonal monthly trends.",
+        checkpoint_question: "What is the primary objective of Exploratory Data Analysis (EDA)?",
+        checkpoint_options: [
+          "To format CSS buttons on a web page.",
+          "To summarize key statistical properties, detect anomalies, and uncover business patterns in data.",
+          "To encrypt database passwords.",
+          "To build mobile iOS applications."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "EDA aims to understand data structure, distributions, missingness, and underlying patterns."
+      }
+    ]
+  },
+  {
+    id: "course-sql-analytics",
+    title: "SQL & Relational Querying for Analytics",
+    description: "Master relational database models, SELECT querying, WHERE filtering, GROUP BY aggregations, JOINs, subqueries, and window functions.",
+    category: "database",
+    domain: "data_analytics",
+    difficulty: "Beginner",
+    estimated_minutes: 140,
+    lessons: [
+      {
+        id: "sql-an-l1",
+        course_id: "course-sql-analytics",
+        title: "Relational Concepts & SELECT Query Filtering",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Understand relational table schemas, primary/foreign keys, SELECT column projections, and WHERE logical filters.",
+        concept_guide: `SQL (Structured Query Language) is the universal language for querying relational database management systems (RDBMS) like PostgreSQL, MySQL, and Snowflake.
+
+Relational Structure:
+- Entity Tables store records in rows and attributes in columns.
+- Primary Key (PK): Uniquely identifies each row in a table.
+- Foreign Key (FK): Establishes relational links between tables.
+
+Query Execution Order:
+\`FROM\` → \`WHERE\` → \`GROUP BY\` → \`HAVING\` → \`SELECT\` → \`ORDER BY\` → \`LIMIT\`.
+Understanding execution order is crucial for writing performant queries!`,
+        code_example: `SELECT 
+  customer_id,
+  first_name,
+  last_name,
+  signup_date
+FROM customers
+WHERE signup_date >= '2026-01-01'
+  AND status = 'Active'
+ORDER BY signup_date DESC
+LIMIT 10;`,
+        code_explanation: "Filters active customers who signed up in 2026, sorts by newest signup date, and limits results to 10 rows.",
+        practical_exercise: "Write a SQL query selecting `order_id`, `customer_id`, and `total_amount` from an `orders` table where order status is 'Completed' and total_amount exceeds $150.",
+        checkpoint_question: "In standard SQL query processing, which clause is evaluated FIRST by the database engine?",
+        checkpoint_options: [
+          "SELECT",
+          "ORDER BY",
+          "FROM",
+          "WHERE"
+        ],
+        checkpoint_correct_index: 2,
+        checkpoint_explanation: "The database engine first evaluates FROM to identify source tables before filtering rows with WHERE."
+      },
+      {
+        id: "sql-an-l2",
+        course_id: "course-sql-analytics",
+        title: "Aggregations & GROUP BY Summarization",
+        lesson_type: "exercise",
+        sequence_order: 2,
+        estimated_minutes: 25,
+        objective: "Summarize metrics using aggregate functions (SUM, AVG, COUNT, MIN, MAX) and filter aggregated groups with HAVING.",
+        concept_guide: `Aggregate functions compute a single summary value from a set of values in a column.
+
+Key Aggregate Functions:
+- \`COUNT(*)\` / \`COUNT(DISTINCT col)\`: Counts total rows or unique values.
+- \`SUM(col)\` & \`AVG(col)\`: Calculates numeric totals and averages.
+
+\`GROUP BY\` groups rows sharing common values into summary rows.
+Crucial distinction: Use \`WHERE\` to filter individual rows BEFORE grouping; use \`HAVING\` to filter summary groups AFTER aggregation!`,
+        code_example: `SELECT 
+  region,
+  COUNT(order_id) AS total_orders,
+  ROUND(AVG(order_value), 2) AS avg_order_value,
+  SUM(order_value) AS total_revenue
+FROM sales_records
+WHERE status = 'Shipped'
+GROUP BY region
+HAVING SUM(order_value) >= 50000.00
+ORDER BY total_revenue DESC;`,
+        code_explanation: "Groups shipped sales by region, computes order counts and revenue metrics, and filters regions with revenue >= $50,000 using HAVING.",
+        practical_exercise: "Write a SQL query grouping employees by department to find department headcounts and average salary, keeping only departments with more than 5 employees.",
+        checkpoint_question: "What is the difference between WHERE and HAVING clauses in SQL?",
+        checkpoint_options: [
+          "WHERE filters rows before grouping; HAVING filters aggregated groups after GROUP BY execution.",
+          "WHERE works only on numbers; HAVING works only on dates.",
+          "HAVING executes before FROM.",
+          "There is no difference; they are aliases."
+        ],
+        checkpoint_correct_index: 0,
+        checkpoint_explanation: "WHERE filters raw individual records prior to aggregation; HAVING filters aggregated summary rows."
+      },
+      {
+        id: "sql-an-l3",
+        course_id: "course-sql-analytics",
+        title: "Multi-Table JOINs & Entity Relationships",
+        lesson_type: "exercise",
+        sequence_order: 3,
+        estimated_minutes: 25,
+        objective: "Combine data across multiple tables using INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN.",
+        concept_guide: `Relational normalization stores entities across separate tables to prevent redundancy. JOIN operations reconstruct unified datasets at query time using foreign key references.
+
+Types of JOINs:
+1. INNER JOIN: Returns only rows where matching keys exist in BOTH tables.
+2. LEFT JOIN: Returns ALL rows from the left table and matching rows from the right table (filling NULLs when no match exists).
+3. RIGHT JOIN: Returns ALL rows from right table and matching left rows.
+4. FULL OUTER JOIN: Returns all rows from both tables regardless of matching.`,
+        code_example: `SELECT 
+  c.customer_id,
+  c.email,
+  o.order_id,
+  o.order_date,
+  o.total_amount
+FROM customers c
+INNER JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.order_date >= '2026-01-01';`,
+        code_explanation: "Performs an INNER JOIN matching customer profiles with orders placed in 2026 using customer_id keys.",
+        practical_exercise: "Write a SQL LEFT JOIN query displaying all product names and their total sales quantities, ensuring products with zero sales are still listed with NULL or 0.",
+        checkpoint_question: "Which JOIN type guarantees that ALL records from the left table are preserved even if no matching row exists in the right table?",
+        checkpoint_options: [
+          "INNER JOIN",
+          "LEFT JOIN",
+          "CROSS JOIN",
+          "SELF JOIN"
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "LEFT JOIN preserves every record from the left table, supplying NULL values for unmatched right table columns."
+      },
+      {
+        id: "sql-an-l4",
+        course_id: "course-sql-analytics",
+        title: "Advanced Analytic Window Functions",
+        lesson_type: "project",
+        sequence_order: 4,
+        estimated_minutes: 30,
+        objective: "Compute running totals, moving averages, and ranks across row partitions using OVER(), PARTITION BY, and ROW_NUMBER()/RANK().",
+        concept_guide: `Window Functions perform calculations across a set of table rows related to the current row without collapsing rows into a single summary output (unlike GROUP BY).
+
+Syntax: \`FUNCTION() OVER (PARTITION BY col ORDER BY col)\`
+
+Common Analytic Functions:
+- \`ROW_NUMBER()\`: Assigns sequential unique integers to rows within a partition.
+- \`RANK()\`: Assigns ranks with gaps on tied values.
+- \`DENSE_RANK()\`: Assigns ranks without skipping numbers.
+- \`SUM(val) OVER (PARTITION BY dept ORDER BY date)\`: Calculates cumulative running totals!`,
+        code_example: `SELECT 
+  employee_id,
+  department,
+  salary,
+  DENSE_RANK() OVER (
+    PARTITION BY department 
+    ORDER BY salary DESC
+  ) AS salary_rank,
+  SUM(salary) OVER (
+    PARTITION BY department
+  ) AS total_dept_spend
+FROM employees;`,
+        code_explanation: "Ranks employees by salary within each department and calculates total department spend without collapsing individual employee rows.",
+        practical_exercise: "Write a SQL query using `ROW_NUMBER()` to select the single most recent order placed by each customer.",
+        checkpoint_question: "Unlike GROUP BY, how do Window Functions affect the number of rows returned in a query result set?",
+        checkpoint_options: [
+          "Window functions collapse all rows into 1 summary row.",
+          "Window functions preserve all original detail rows while attaching calculated partition values.",
+          "Window functions automatically delete duplicate rows.",
+          "Window functions double the total row count."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Window functions append computed aggregate values to every row without reducing or grouping the original dataset."
+      }
+    ]
+  },
+  {
+    id: "course-stats-data-analysis",
+    title: "Statistics & Probability for Data Science",
+    description: "Understand descriptive statistics, probability distributions, central limit theorem, hypothesis testing, p-values, and A/B testing.",
+    category: "statistics",
+    domain: "data_analytics",
+    difficulty: "Intermediate",
+    estimated_minutes: 130,
+    lessons: [
+      {
+        id: "stats-l1",
+        course_id: "course-stats-data-analysis",
+        title: "Descriptive Metrics, Variance & Distributions",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Calculate measures of central tendency (mean, median, mode) and dispersion (range, variance, standard deviation, IQR).",
+        concept_guide: `Descriptive statistics quantitatively summarize features of a collected dataset.
+
+Central Tendency:
+- Mean: Arithmetic average. Sensitive to extreme outliers.
+- Median: Middle value of ordered data. Robust to skewness.
+- Mode: Most frequently occurring value.
+
+Dispersion & Variance:
+- Variance (\`σ²\`): Average squared deviation from the mean.
+- Standard Deviation (\`σ\`): Square root of variance, expressed in original data units.
+- Interquartile Range (IQR): Difference between 75th (Q3) and 25th (Q1) percentiles.`,
+        code_example: `import scipy.stats as stats
+import numpy as np
+
+data = np.array([23, 25, 28, 32, 35, 38, 42, 95]) # Contains outlier 95
+
+print(f"Mean: {np.mean(data):.1f}")     # 39.8 (inflated)
+print(f"Median: {np.median(data):.1f}") # 30.0 (robust)
+print(f"Std Dev: {np.std(data):.1f}")   # 21.6
+print(f"IQR: {stats.iqr(data):.1f}")    # 10.8`,
+        code_explanation: "Calculates summary metrics highlighting how mean is inflated by outlier 95 compared to median and IQR.",
+        practical_exercise: "Calculate mean, median, standard deviation, and IQR for a dataset of customer delivery times and interpret whether the distribution is right-skewed.",
+        checkpoint_question: "Which measure of dispersion represents the distance between the 25th and 75th percentiles of a dataset?",
+        checkpoint_options: [
+          "Standard Deviation",
+          "Interquartile Range (IQR)",
+          "Variance",
+          "Standard Error"
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "The Interquartile Range (IQR = Q3 - Q1) measures the middle 50% spread of a dataset."
+      },
+      {
+        id: "stats-l2",
+        course_id: "course-stats-data-analysis",
+        title: "Hypothesis Testing & A/B Experimentation",
+        lesson_type: "exercise",
+        sequence_order: 2,
+        estimated_minutes: 25,
+        objective: "Formulate null (H₀) and alternative (H₁) hypotheses, execute two-sample t-tests, and evaluate p-values against significance thresholds (α = 0.05).",
+        concept_guide: `Hypothesis Testing is a statistical framework for determining whether observed sample differences represent true underlying effects or random chance.
+
+A/B Testing Framework:
+- Null Hypothesis (H₀): No difference exists between Control (A) and Treatment (B) variants.
+- Alternative Hypothesis (H₁): Treatment (B) produces a statistically significant change.
+- p-value: Probability of observing sample results as extreme as measured assuming H₀ is true.
+- Alpha Threshold (α = 0.05): If p-value < 0.05, reject H₀ in favor of H₁!`,
+        code_example: `from scipy import stats
+
+# Conversion rates for Control (A) vs New Feature (B)
+control = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0] # 40% conversion
+variant = [1, 1, 0, 1, 1, 1, 0, 1, 1, 0] # 70% conversion
+
+# Perform Independent 2-Sample T-Test
+t_stat, p_val = stats.ttest_ind(control, variant)
+
+print(f"P-value: {p_val:.4f}")
+if p_val < 0.05:
+    print("Statistically significant result: Launch Variant B!")
+else:
+    print("Fail to reject H₀: Insufficient evidence.")`,
+        code_explanation: "Executes a two-sample t-test comparing conversion results and evaluates p-value against 0.05 alpha threshold.",
+        practical_exercise: "Run an A/B test analysis comparing email click-through rates between Subject Line A and Subject Line B using SciPy t-test functions.",
+        checkpoint_question: "If an A/B experiment yields a p-value of 0.02 with an alpha threshold of 0.05, what conclusion should the analyst draw?",
+        checkpoint_options: [
+          "Accept the null hypothesis that no difference exists.",
+          "Reject the null hypothesis; the observed variant improvement is statistically significant.",
+          "Discard all data and restart the test.",
+          "Increase the p-value to 0.10."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "A p-value less than alpha (0.02 < 0.05) provides sufficient statistical evidence to reject H₀."
+      }
+    ]
+  }
+]
+
+// ============================================================================
+// DOMAIN 2: FULL-STACK & WEB ENGINEERING COURSES
+// ============================================================================
+export const FULL_STACK_COURSES: Course[] = [
   {
     id: "course-html-css",
     title: "HTML & CSS Foundations",
     description: "Master modern HTML5 semantics, accessibility standards, Flexbox/Grid spatial layouts, and responsive CSS architecture.",
     category: "frontend",
+    domain: "full_stack",
     difficulty: "Beginner",
     estimated_minutes: 145,
     lessons: [
@@ -65,711 +488,65 @@ export const CONST_COURSES: Course[] = [
         objective: "Master standard HTML5 document syntax, doctype declarations, head metadata, and tag nesting hierarchy.",
         concept_guide: `HTML (HyperText Markup Language) provides the fundamental structural blueprint of every webpage on the internet. Browsers parse HTML documents from top to bottom, constructing a Document Object Model (DOM) tree in memory.
 
-The <!DOCTYPE html> declaration informs the browser engine that the document complies with the modern HTML5 specification, preventing browsers from triggering legacy "quirks mode".
-
-Inside the root <html> element, the document is partitioned into two primary children:
-1. <head>: Contains non-visual metadata, document title, character encoding (<meta charset="UTF-8">), viewport scaling rules, and linked external stylesheet assets.
-2. <body>: Encloses all renderable UI content including text, images, forms, and structural sections.
-
-Strict syntax rules dictate that all opening tags must be properly closed or self-closed, attributes must be enclosed in quotes, and elements must follow clean ancestor-descendant nesting without overlapping tags.`,
+The <!DOCTYPE html> declaration informs the browser engine that the document complies with modern HTML5 specs, preventing legacy quirks mode.`,
         code_example: `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTML5 Structural Blueprint</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>HTML5 Structure</title>
 </head>
 <body>
-  <header>
-    <h1>Modern Web Development</h1>
-    <p>Building accessible, performant interfaces</p>
-  </header>
-  <main>
-    <article>
-      <h2>Document Object Model Hierarchy</h2>
-      <p>HTML tags construct DOM nodes parsed sequentially by web browsers.</p>
-    </article>
-  </main>
-  <footer>
-    <p>&copy; 2026 LearnPilot Academy</p>
-  </footer>
+  <h1>LearnPilot Web Architecture</h1>
 </body>
 </html>`,
-        code_explanation: "This snippet demonstrates a standards-compliant HTML5 document with charset encoding, responsive viewport meta tags, semantic landmarks (header, main, article, footer), and clean hierarchy.",
-        practical_exercise: "Open your code editor and build an HTML5 file named `index.html`. Add a valid head section with viewport metadata, a title of 'My First Web Page', and a body containing a main element with an h1 heading and two paragraph elements.",
-        checkpoint_question: "Why is the <!DOCTYPE html> declaration placed at the very first line of an HTML document?",
+        code_explanation: "Demonstrates standard HTML5 document boilerplate structure.",
+        practical_exercise: "Create an HTML file with semantic header, main, and footer tags.",
+        checkpoint_question: "Why is <!DOCTYPE html> placed on line 1 of an HTML document?",
         checkpoint_options: [
-          "It forces the browser to download external JavaScript files faster.",
-          "It informs the browser to parse the page using standard HTML5 rendering rules instead of quirks mode.",
-          "It creates an encrypted secure connection to the web server.",
-          "It styles the page with default CSS framework reset rules."
+          "To speed up images.",
+          "To inform the browser to use standard HTML5 rendering rules.",
+          "To connect to Supabase database.",
+          "To enable dark mode CSS."
         ],
         checkpoint_correct_index: 1,
-        checkpoint_explanation: "The doctype declaration tells the browser's rendering engine that the document follows the HTML5 specification, preventing legacy rendering quirks."
-      },
-      {
-        id: "html-css-l2",
-        course_id: "course-html-css",
-        title: "Semantic Elements & ARIA Accessibility",
-        lesson_type: "exercise",
-        sequence_order: 2,
-        estimated_minutes: 25,
-        objective: "Apply HTML5 semantic sectioning elements and ARIA accessibility roles to create machine-readable document landmarks.",
-        concept_guide: `In early web development, layouts were constructed using generic <div> tags with custom class names like <div class="header">. HTML5 introduced semantic elements (<header>, <nav>, <main>, <article>, <section>, <aside>, <footer>) that explicitly describe their content's purpose to browsers, search engines, and screen readers.
-
-Semantic markup produces clear document outlines and enhances web accessibility (a11y). Screen reader users rely on landmark navigation keys to jump directly between main content, navigation bars, and footers.
-
-When native HTML elements cannot fully express a custom widget's interactive state, WAI-ARIA (Accessible Rich Internet Applications) attributes bridge the gap using roles (role="dialog"), states (aria-expanded="true"), and accessible names (aria-label="Close modal window").`,
-        code_example: `<header role="banner" className="site-header">
-  <nav aria-label="Primary Navigation">
-    <ul>
-      <li><a href="#courses">Courses</a></li>
-      <li><a href="#about">About</a></li>
-    </ul>
-  </nav>
-</header>
-
-<main id="main-content">
-  <section aria-labelledby="section-heading">
-    <h2 id="section-heading">Semantic Principles</h2>
-    <article className="card">
-      <h3>Accessibility First</h3>
-      <p>Semantic tags allow assistive tools to navigate page landmarks seamlessly.</p>
-    </article>
-  </section>
-</main>`,
-        code_explanation: "Demonstrates semantic landmarks with ARIA attributes (aria-label, aria-labelledby) for screen reader accessibility.",
-        practical_exercise: "Refactor a webpage layout consisting entirely of <div> elements into semantic elements (<header>, <nav>, <main>, <article>, <footer>) and add an aria-label to the navigation bar.",
-        checkpoint_question: "Which HTML element should be used to enclose self-contained, independently redistributable content like a blog post or news article?",
-        checkpoint_options: [
-          "<section>",
-          "<div>",
-          "<article>",
-          "<aside>"
-        ],
-        checkpoint_correct_index: 2,
-        checkpoint_explanation: "The <article> element represents a self-contained composition intended to be independently reusable or redistributable."
-      },
-      {
-        id: "html-css-l3",
-        course_id: "course-html-css",
-        title: "CSS Selectors, Specificity & Box Model",
-        lesson_type: "concept",
-        sequence_order: 3,
-        estimated_minutes: 20,
-        objective: "Master CSS rule declaration syntax, selector specificity calculation, and element dimension box model physics.",
-        concept_guide: `CSS (Cascading Style Sheets) controls the visual presentation, typography, and spatial geometry of HTML elements.
-
-The CSS Box Model is the foundational layout physics engine. Every HTML element is modeled as a rectangular box comprising four concentric layers:
-1. Content Box: Where text, images, and child elements render.
-2. Padding: Transparent buffer space surrounding the content.
-3. Border: Visible line surrounding the padding.
-4. Margin: Transparent outer spacing separating the element from sibling boxes.
-
-By default, CSS uses content-box sizing where width specifies only the content width, causing padding and borders to expand total element size. Applying \`box-sizing: border-box\` universally forces width and height to include padding and border inside specified dimensions.
-
-CSS Specificity determines which style rules apply when multiple selectors target the same element:
-Inline Styles (1000) > IDs (100) > Classes/Attributes (10) > Elements/Types (1).`,
-        code_example: `/* Universal Box Sizing Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* Card Component Box Model */
-.card-container {
-  width: 320px;
-  padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin: 16px auto;
-  border-radius: 12px;
-  background-color: #1e293b;
-}`,
-        code_explanation: "Defines universal box-sizing reset and demonstrates explicit padding, border, and margin rules.",
-        practical_exercise: "Calculate total calculated element width for a div with width: 300px, padding: 20px, and border: 2px under content-box vs border-box.",
-        checkpoint_question: "With box-sizing: border-box enabled, what is the total rendered width of an element with width: 250px, padding: 20px, and border: 5px?",
-        checkpoint_options: [
-          "300px",
-          "250px",
-          "275px",
-          "295px"
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "With border-box, total width remains exactly equal to the specified width (250px) because padding and border are absorbed inward."
-      },
-      {
-        id: "html-css-l4",
-        course_id: "course-html-css",
-        title: "CSS Flexbox One-Dimensional Layout Systems",
-        lesson_type: "exercise",
-        sequence_order: 4,
-        estimated_minutes: 25,
-        objective: "Construct dynamic flexible rows and columns using Flexbox container properties and item distribution controls.",
-        concept_guide: `Flexbox (Flexible Box Layout) is a one-dimensional CSS layout system designed for distributing space and aligning items along a single axis (either row or column).
-
-When \`display: flex\` is declared on a container:
-1. Main Axis: Defined by flex-direction (row default, column). Justified using \`justify-content\` (flex-start, flex-end, center, space-between, space-around, space-evenly).
-2. Cross Axis: Perpendicular to the main axis. Aligned using \`align-items\` (flex-start, flex-end, center, stretch, baseline).
-
-Individual flex items can grow to fill available space (\`flex-grow: 1\`), shrink when constrained (\`flex-shrink: 1\`), or establish a base size (\`flex-basis: 200px\`).`,
-        code_example: `.navbar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 1rem 2rem;
-  background-color: #0f172a;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  list-style: none;
-}`,
-        code_explanation: "Demonstrates flexbox container alignment to distribute brand logo and navigation link items across a header bar.",
-        practical_exercise: "Create a flexbox container holding three pricing cards. Align the cards side by side with equal gaps and ensure all cards stretch to match the tallest card's height.",
-        checkpoint_question: "Which Flexbox property controls item alignment along the MAIN axis?",
-        checkpoint_options: [
-          "align-items",
-          "justify-content",
-          "flex-wrap",
-          "align-content"
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "justify-content aligns items along the primary main axis established by flex-direction."
-      },
-      {
-        id: "html-css-l5",
-        course_id: "course-html-css",
-        title: "CSS Grid Two-Dimensional Spatial Systems",
-        lesson_type: "exercise",
-        sequence_order: 5,
-        estimated_minutes: 25,
-        objective: "Design two-dimensional grid layouts with explicit columns, rows, fractional fr units, and responsive auto-fit minmax patterns.",
-        concept_guide: `CSS Grid is a two-dimensional spatial layout system capable of handling both rows and columns simultaneously.
-
-Unlike Flexbox which works from content outward, Grid allows developers to define a structural layout mesh first and place content items into explicit grid tracks.
-
-Key Grid properties:
-- \`grid-template-columns\`: Defines track widths using pixels, percentages, or flexible fractional units (\`1fr\`).
-- \`gap\`: Defines spatial gutters between tracks.
-- Responsive grid magic: \`grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\` creates an auto-responsive layout grid that automatically wraps columns into rows without needing media queries!`,
-        code_example: `.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  padding: 2rem;
-}
-
-.grid-card {
-  background: #1e293b;
-  border-radius: 1rem;
-  padding: 1.5rem;
-}`,
-        code_explanation: "Uses auto-fit and minmax to create a responsive multi-column dashboard grid that adapts smoothly across screen sizes.",
-        practical_exercise: "Build a photo gallery grid displaying 6 images in a 3-column layout on desktop that dynamically reflows to 2 columns on tablet and 1 column on mobile screens.",
-        checkpoint_question: "What does the fractional unit (1fr) represent in CSS Grid layout calculations?",
-        checkpoint_options: [
-          "One frame per second in CSS animations.",
-          "One fraction of the remaining free space inside the grid container.",
-          "One fixed rem unit relative to the root font size.",
-          "One percentage of the total browser viewport height."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "The fr unit represents a fraction of the remaining available space inside the grid container after fixed tracks are allocated."
-      },
-      {
-        id: "html-css-l6",
-        course_id: "course-html-css",
-        title: "Responsive Design & Mobile-First Media Queries",
-        lesson_type: "project",
-        sequence_order: 6,
-        estimated_minutes: 30,
-        objective: "Assemble a responsive portfolio landing page layout using fluid typography, media queries, and mobile-first breakpoints.",
-        concept_guide: `Mobile-First Responsive Web Design is the industry standard practice of designing the base CSS styles for small viewports first, then using progressive enhancement via min-width media queries to enhance layouts for larger screens.
-
-Benefits of Mobile-First design:
-1. Performance: Mobile devices load lightweight core styles without downloading unnecessary desktop desktop desktop rules.
-2. Usability: Forces developers to prioritize essential content before expanding spatial real estate.
-
-Standard Breakpoint Conventions:
-- Mobile Small: 320px - 480px
-- Tablet: 768px (\`@media (min-width: 768px)\`)
-- Desktop: 1024px (\`@media (min-width: 1024px)\`)
-- Ultra Wide: 1280px+`,
-        code_example: `/* Base Mobile Styles */
-.hero-container {
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-}
-
-/* Tablet & Desktop Enhancement */
-@media (min-width: 768px) {
-  .hero-container {
-    flex-direction: row;
-    align-items: center;
-    padding: 4rem;
-  }
-}`,
-        code_explanation: "Demonstrates mobile-first flex-direction stacking that converts into a horizontal row at tablet width (768px).",
-        practical_exercise: "Take your semantic web page layout and write media queries to transform a stacked 1-column mobile layout into a multi-column desktop layout above 768px.",
-        checkpoint_question: "In mobile-first responsive design, which media query parameter is typically used to progressively enhance layouts?",
-        checkpoint_options: [
-          "(max-width: 768px)",
-          "(min-width: 768px)",
-          "(orientation: portrait)",
-          "(device-pixel-ratio: 2)"
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "min-width queries target viewports at or above the specified width threshold, enabling mobile-first progressive enhancement."
+        checkpoint_explanation: "It signals HTML5 standard rendering mode to browser engines."
       }
     ]
   },
   {
     id: "course-javascript-fundamentals",
-    title: "JavaScript Fundamentals",
+    title: "JavaScript Fundamentals & Async Control",
     description: "Deep dive into ES6+ syntax, functions, closures, DOM manipulation, promises, async/await, and event handling.",
     category: "javascript",
+    domain: "full_stack",
     difficulty: "Beginner",
     estimated_minutes: 140,
     lessons: [
       {
         id: "js-fund-l1",
         course_id: "course-javascript-fundamentals",
-        title: "ES6+ Syntax, Let/Const & Variable Scoping",
+        title: "ES6+ Syntax, Let/Const & Scoping Rules",
         lesson_type: "concept",
         sequence_order: 1,
         estimated_minutes: 20,
-        objective: "Understand block scoping, temporal dead zone, immutability conventions, and template literal interpolation.",
-        concept_guide: `JavaScript (ECMAScript) is the dynamic programming language of the web. ES6 (2015) revolutionized JavaScript by introducing modern variable declarations: \`let\` and \`const\`.
+        objective: "Understand block scoping, temporal dead zone, and const immutability rules.",
+        concept_guide: `ES6 introduced let and const for block-scoped variable declarations, eliminating var function-hoisting quirks.`,
+        code_example: `const user = { name: "Alex" };
+user.name = "Sam"; // Valid mutation
 
-Scoping Differences:
-- \`var\`: Function-scoped or globally-scoped. Subject to hoisting quirks where variables can be accessed before declaration as undefined.
-- \`let\`: Block-scoped (enclosed within \`{}\`). Reassignable value.
-- \`const\`: Block-scoped. Cannot be reassigned after initialization.
-
-Important: \`const\` prevents variable identifier reassignment, but does NOT make object or array contents immutable! Properties of a \`const\` object can still be modified.
-
-Template literals (\` \${expr} \`) enable clean string interpolation and multi-line string construction without cumbersome concatenation.`,
-        code_example: `const learner = { name: "Alex", score: 95 };
-learner.score = 98; // Valid property mutation
-
-let statusMessage = "In Progress";
-statusMessage = "Completed"; // Valid variable reassignment
-
-const summary = \`Learner \${learner.name} scored \${learner.score}%. Status: \${statusMessage}.\`;
-console.log(summary);`,
-        code_explanation: "Demonstrates const object property mutation versus let variable reassignment and template literal string interpolation.",
-        practical_exercise: "Write a function that accepts a user object and returns a formatted multi-line summary string using ES6 template literals and destructuring.",
-        checkpoint_question: "What happens if you attempt to reassign a variable declared with const (e.g. const x = 10; x = 20;)?",
+let count = 1;
+count = 2; // Valid reassignment`,
+        code_explanation: "Demonstrates block-scoped const object mutation vs let reassignment.",
+        practical_exercise: "Write a function returning a template literal string summary using const and let variables.",
+        checkpoint_question: "What happens when reassigning a const variable?",
         checkpoint_options: [
-          "x silently converts to a let variable and accepts 20.",
-          "JavaScript throws a TypeError: Assignment to constant variable.",
-          "The variable value becomes undefined.",
-          "The value automatically rolls back to 10."
+          "Converts to let silently.",
+          "Throws a TypeError at runtime.",
+          "Returns null.",
+          "Reloads the page."
         ],
         checkpoint_correct_index: 1,
-        checkpoint_explanation: "Reassigning a const variable throws an explicit TypeError at runtime."
-      },
-      {
-        id: "js-fund-l2",
-        course_id: "course-javascript-fundamentals",
-        title: "Functions, Lexical Scope & Closures",
-        lesson_type: "concept",
-        sequence_order: 2,
-        estimated_minutes: 25,
-        objective: "Master first-class function expressions, arrow function lexical this binding, and closure scope preservation.",
-        concept_guide: `Functions in JavaScript are first-class objects, meaning they can be assigned to variables, passed as arguments to other functions, and returned from function calls.
-
-A Closure is the combination of a function bundled together with references to its surrounding lexical environment. In plain terms: an inner function always retains access to variables declared in its outer parent scope, even after the parent function has finished executing!
-
-Closures enable data privacy, module encapsulation, and state preservation in functional programming patterns.`,
-        code_example: `function createScoreCounter(initialScore = 0) {
-  let count = initialScore; // Private encapsulated state
-
-  return {
-    increment: () => ++count,
-    decrement: () => --count,
-    getValue: () => count
-  };
-}
-
-const alexCounter = createScoreCounter(10);
-alexCounter.increment(); // 11
-console.log(alexCounter.getValue()); // 11 (count is inaccessible directly)`,
-        code_explanation: "Illustrates a closure factory returning an object whose methods retain private lexical access to count.",
-        practical_exercise: "Build a function named `createIdGenerator(prefix)` that returns a closure generating sequential IDs (e.g. `user_1`, `user_2`).",
-        checkpoint_question: "What defines a closure in JavaScript?",
-        checkpoint_options: [
-          "A function that automatically closes all open database connections.",
-          "An inner function that retains access to variables from its outer lexical scope after the outer function has returned.",
-          "A block of CSS code that closes a flexbox container.",
-          "An async function that returns a Promise resolved value."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "A closure allows an inner function to remember and access variables from its outer lexical environment even after execution completes."
-      },
-      {
-        id: "js-fund-l3",
-        course_id: "course-javascript-fundamentals",
-        title: "DOM Node Selection & Event Delegation",
-        lesson_type: "exercise",
-        sequence_order: 3,
-        estimated_minutes: 25,
-        objective: "Interact with the browser DOM tree, attach event listeners, and utilize event delegation bubbling.",
-        concept_guide: `The Document Object Model (DOM) is an object-oriented representation of the webpage hierarchy. JavaScript uses methods like \`document.querySelector()\` and \`document.querySelectorAll()\` to query DOM elements using standard CSS selector strings.
-
-Event Propagation flows through three phases:
-1. Capturing Phase: Event descends from window to target element.
-2. Target Phase: Event reaches target node.
-3. Bubbling Phase: Event ascends from target node back up through parent DOM ancestors.
-
-Event Delegation leverages event bubbling by attaching a single event listener to a parent element rather than attaching individual listeners to dozens of child elements. When a child is clicked, the event bubbles up to the parent listener, which inspects \`event.target\` to handle the action efficiently!`,
-        code_example: `const todoList = document.querySelector('#todo-list');
-
-// Event Delegation on parent container
-todoList.addEventListener('click', (event) => {
-  if (event.target.matches('.delete-btn')) {
-    const item = event.target.closest('li');
-    item.remove();
-  }
-});`,
-        code_explanation: "Uses event delegation on a parent list element to catch delete button clicks on dynamically generated list items.",
-        practical_exercise: "Create an interactive list where clicking any list item toggles a `.completed` CSS class on that specific item using a single event listener on the parent ul.",
-        checkpoint_question: "Why is event delegation more efficient than attaching event listeners to 100 individual button elements?",
-        checkpoint_options: [
-          "It uses less memory by creating only 1 listener function instead of 100 separate event listener instances.",
-          "It prevents the browser from making network HTTP calls.",
-          "It automatically encrypts user click events.",
-          "It forces the DOM to render in WebGL mode."
-        ],
-        checkpoint_correct_index: 0,
-        checkpoint_explanation: "Event delegation reduces memory overhead and simplifies dynamic DOM element management by using a single ancestor listener."
-      },
-      {
-        id: "js-fund-l4",
-        course_id: "course-javascript-fundamentals",
-        title: "Promises & Async/Await Control Flow",
-        lesson_type: "concept",
-        sequence_order: 4,
-        estimated_minutes: 25,
-        objective: "Master single-threaded Event Loop execution, Promise states, and async/await syntax error handling.",
-        concept_guide: `JavaScript executes in a single-threaded runtime environment driven by an Event Loop. Asynchronous operations like network requests, timers, and file I/O are offloaded to background Web APIs without blocking the main execution thread.
-
-A Promise is an object representing the eventual completion (or failure) of an asynchronous operation.
-A Promise exists in one of three states:
-1. Pending: Initial state, operation incomplete.
-2. Fulfilled: Operation completed successfully (\`resolve(value)\`).
-3. Rejected: Operation failed (\`reject(error)\`).
-
-ES2017 introduced \`async/await\` as syntactic sugar over Promises, allowing developers to write asynchronous code that reads sequentially like synchronous code using \`try / catch\` error blocks.`,
-        code_example: `async function fetchLearnerProfile(userId) {
-  try {
-    const response = await fetch(\`/api/profiles/\${userId}\`);
-    if (!response.ok) {
-      throw new Error(\`HTTP Error \${response.status}: Failed to load profile\`);
-    }
-    const profileData = await response.json();
-    return profileData;
-  } catch (error) {
-    console.error("Network fetch failed:", error.message);
-    throw error;
-  }
-}`,
-        code_explanation: "Demonstrates an async function wrapping a fetch request with HTTP response status validation and try/catch block handling.",
-        practical_exercise: "Write an async function `loadUserCurriculum(userId)` that fetches user data, validates response status, parses JSON, and logs the returned curriculum plan.",
-        checkpoint_question: "What does the await keyword do when placed before a Promise expression inside an async function?",
-        checkpoint_options: [
-          "It terminates the browser tab if the Promise rejects.",
-          "It pauses async function execution until the Promise resolves or rejects, returning the fulfilled value.",
-          "It forces the Promise to execute synchronously on a secondary multi-threaded worker.",
-          "It converts the Promise into a string representation."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "The await operator pauses async function execution until the Promise settles, resuming with the resolved value or throwing an error if rejected."
-      },
-      {
-        id: "js-fund-l5",
-        course_id: "course-javascript-fundamentals",
-        title: "Fetch API & Remote Data Operations",
-        lesson_type: "exercise",
-        sequence_order: 5,
-        estimated_minutes: 25,
-        objective: "Execute HTTP GET, POST, and PUT operations using fetch, set request headers, and send JSON payloads.",
-        concept_guide: `The Fetch API provides a modern interface for fetching web resources over HTTP/HTTPS protocols.
-
-Important Fetch Behavior:
-- Fetch Promises only reject on actual network errors (e.g. lost internet connection).
-- Fetch Promises DO NOT reject on HTTP error status codes like 404 (Not Found) or 500 (Internal Server Error)! Developers must manually check \`response.ok\` (true if status is 200-299).
-
-When sending data to a server using POST or PUT:
-1. Specify \`method: 'POST'\`.
-2. Pass \`headers: { 'Content-Type': 'application/json' }\`.
-3. Convert data payload into a JSON string using \`body: JSON.stringify(data)\`.`,
-        code_example: `async function saveLessonCompletion(courseId, lessonId) {
-  const payload = { course_id: courseId, lesson_id: lessonId };
-  
-  const res = await fetch('/api/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    throw new Error(\`Failed to save completion: \${res.statusText}\`);
-  }
-
-  return await res.json();
-}`,
-        code_explanation: "Demonstrates sending a JSON payload via HTTP POST using fetch with proper headers and response validation.",
-        practical_exercise: "Write a function that posts a new note object `{ title: 'JS Study Note', content: 'Closures are powerful' }` to `/api/notes` and logs the server response.",
-        checkpoint_question: "Why must you check response.ok when using the Fetch API?",
-        checkpoint_options: [
-          "Because fetch automatically deletes local files if response is false.",
-          "Because fetch does not reject its promise on 404 or 500 HTTP error status codes.",
-          "Because response.ok is required to parse CSS stylesheets.",
-          "Because fetch only works when response.ok is set to string 'ok'."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Fetch resolves its promise normally even if the server returns 404 or 500 error status codes, requiring developers to inspect response.ok."
-      },
-      {
-        id: "js-fund-l6",
-        course_id: "course-javascript-fundamentals",
-        title: "Dynamic Client Application Capstone",
-        lesson_type: "project",
-        sequence_order: 6,
-        estimated_minutes: 35,
-        objective: "Assemble a dynamic client-side application featuring modular state management, DOM rendering, and API persistence.",
-        concept_guide: `Building production-ready client applications requires combining DOM manipulation, event handling, asynchronous fetching, and state management into a clean architecture.
-
-Architecture Principles:
-1. Single Source of Truth: Store application state in a central object or module.
-2. Render Function: Re-render UI views dynamically whenever application state updates.
-3. Separation of Concerns: Decouple API fetching logic from DOM presentation code.`,
-        code_example: `class CourseApp {
-  constructor(apiEndpoint) {
-    this.endpoint = apiEndpoint;
-    this.state = { lessons: [], activeId: null };
-  }
-
-  async init() {
-    this.state.lessons = await fetch(this.endpoint).then(res => res.json());
-    this.render();
-  }
-
-  render() {
-    const list = document.querySelector('#app');
-    list.innerHTML = this.state.lessons.map(l => \`
-      <div class="card">\${l.title}</div>
-    \`).join('');
-  }
-}`,
-        code_explanation: "Demonstrates a clean object-oriented client app pattern separating state initialization, API fetching, and dynamic rendering.",
-        practical_exercise: "Build an interactive task tracker app where users can add tasks via a form, toggle completion state, filter by active/completed status, and persist tasks in localStorage.",
-        checkpoint_question: "What is the primary benefit of separating application state from DOM presentation code?",
-        checkpoint_options: [
-          "It makes state predictable, easier to test, and enables consistent UI rendering when data changes.",
-          "It speeds up internet connection bandwidth.",
-          "It bypasses CORS security policies.",
-          "It automatically minifies JavaScript source files."
-        ],
-        checkpoint_correct_index: 0,
-        checkpoint_explanation: "Decoupling state from DOM representation ensures state changes drive predictable, bug-free UI updates."
-      }
-    ]
-  },
-  {
-    id: "course-git-github",
-    title: "Git & GitHub Essentials",
-    description: "Master distributed version control, branching strategies, pull requests, merge conflict resolution, and collaborative workflows.",
-    category: "tooling",
-    difficulty: "Beginner",
-    estimated_minutes: 100,
-    lessons: [
-      {
-        id: "git-l1",
-        course_id: "course-git-github",
-        title: "Version Control Concepts & Local Repositories",
-        lesson_type: "concept",
-        sequence_order: 1,
-        estimated_minutes: 15,
-        objective: "Initialize Git repositories, stage changes, and create atomic commits with descriptive commit messages.",
-        concept_guide: `Git is a distributed version control system (DVCS) that records changes to files over time, allowing developers to recall specific versions, compare code diffs, and collaborate concurrently.
-
-Git maintains three main states for your files:
-1. Working Tree: The active filesystem directory where files are created and edited.
-2. Staging Index (\`git add\`): The staging area where selected file changes are prepared into atomic snapshots.
-3. Git History (\`git commit\`): The permanent database of committed snapshots recorded with unique SHA-1 hashes.`,
-        code_example: `# Initialize local repository
-git init
-
-# Check working tree status
-git status
-
-# Stage specific files
-git add index.html src/styles.css
-
-# Commit staged snapshot with descriptive message
-git commit -m "feat: initialize HTML structure and CSS reset"`,
-        code_explanation: "Demonstrates initializing a repository, staging files into the index, and committing a snapshot with conventional commit syntax.",
-        practical_exercise: "Create a local project directory, initialize a git repository, add a README.md file, stage it, and commit it with a clear commit message.",
-        checkpoint_question: "What is the primary purpose of the Git Staging Index (git add)?",
-        checkpoint_options: [
-          "To upload files directly to GitHub servers.",
-          "To allow developers to select and review granular file changes before recording them into a permanent commit snapshot.",
-          "To automatically format code with Prettier.",
-          "To compile TypeScript code into JavaScript."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "The staging index acts as a preparation area where developers choose exactly which changes to bundle into the next commit."
-      },
-      {
-        id: "git-l2",
-        course_id: "course-git-github",
-        title: "Branching Strategies & Feature Isolation",
-        lesson_type: "exercise",
-        sequence_order: 2,
-        estimated_minutes: 20,
-        objective: "Create, switch, and merge feature branches to isolate work without destabilizing the main production branch.",
-        concept_guide: `Branching is one of Git's most powerful capabilities. A branch represents an independent line of development pointing to a specific commit.
-
-Branching Workflows:
-- \`main\` / \`master\`: Production-ready code branch. Should always be stable and deployable.
-- \`feature/*\`: Short-lived isolated branches created for specific features, bug fixes, or experiments.
-
-Creating feature branches ensures that incomplete code never breaks production environments.`,
-        code_example: `# Create and switch to new feature branch
-git checkout -b feature/auth-system
-
-# Perform edits and commit work
-git add .
-git commit -m "feat: implement login form validation"
-
-# Switch back to main branch and merge feature
-git checkout main
-git merge feature/auth-system`,
-        code_explanation: "Demonstrates creating a feature branch, making commits in isolation, switching back to main, and merging changes.",
-        practical_exercise: "Create a branch named `feature/footer`, add a footer element to your index.html file, commit the change, switch back to main, and merge the branch.",
-        checkpoint_question: "Which Git command creates a new branch and immediately switches your working tree to it?",
-        checkpoint_options: [
-          "git branch new-name",
-          "git checkout -b new-name",
-          "git merge new-name",
-          "git push -u origin new-name"
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "git checkout -b creates the specified branch and checks it out into your active working directory in one command."
-      },
-      {
-        id: "git-l3",
-        course_id: "course-git-github",
-        title: "Remote Repositories & GitHub Synchronization",
-        lesson_type: "concept",
-        sequence_order: 3,
-        estimated_minutes: 20,
-        objective: "Connect local Git repositories to GitHub remote origins, push branches, and pull upstream team updates.",
-        concept_guide: `GitHub is a cloud platform for hosting Git repositories, providing web interfaces, access controls, collaboration tools, and CI/CD automation pipelines.
-
-Commands for Remote Sync:
-- \`git remote add origin <url>\`: Links local repository to remote GitHub repository.
-- \`git push -u origin <branch>\`: Uploads local branch commits to GitHub and sets upstream tracking.
-- \`git fetch\`: Downloads new remote commits without modifying your local working tree.
-- \`git pull\`: Performs a \`git fetch\` followed by \`git merge\` to integrate remote changes into your active branch.`,
-        code_example: `# Link local repo to GitHub remote origin
-git remote add origin https://github.com/user/learnpilot-project.git
-
-# Push main branch to remote and set upstream tracking
-git push -u origin main
-
-# Pull latest team updates from remote main branch
-git pull origin main`,
-        code_explanation: "Demonstrates linking a remote GitHub repository origin and executing push and pull operations.",
-        practical_exercise: "Create a GitHub repository online, connect your local repository via `git remote add origin`, and push your main branch.",
-        checkpoint_question: "What is the key difference between git fetch and git pull?",
-        checkpoint_options: [
-          "git fetch deletes local commits, while git pull keeps them.",
-          "git fetch downloads remote metadata without modifying working files, whereas git pull fetches and automatically merges changes into your active branch.",
-          "git fetch requires admin password privileges, while git pull does not.",
-          "git fetch only works on Windows operating systems."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "git fetch safely inspects remote changes without touching your working files, while git pull immediately fetches and merges."
-      },
-      {
-        id: "git-l4",
-        course_id: "course-git-github",
-        title: "Pull Requests & Collaborative Code Reviews",
-        lesson_type: "exercise",
-        sequence_order: 4,
-        estimated_minutes: 25,
-        objective: "Submit GitHub Pull Requests (PRs), participate in code reviews, and automate quality checks before merging.",
-        concept_guide: `A Pull Request (PR) is a GitHub feature that proposes integrating changes from a feature branch into a target branch (e.g. main).
-
-PR Workflow Benefits:
-1. Code Review: Teammates review diffs, leave comments, and suggest improvements.
-2. Automated Testing: CI/CD runners (GitHub Actions) run automated test suites and linters.
-3. Protected Branches: Prevents direct unreviewed commits to production branches.`,
-        code_example: `# Create PR using GitHub CLI
-gh pr create \\
-  --title "feat: implement standalone course learning workspace" \\
-  --body "Adds interactive course workspace with lesson stepper and progress persistence." \\
-  --base main \\
-  --head feature/courses-learning-workspace`,
-        code_explanation: "Demonstrates creating a pull request using GitHub CLI specifying title, description, base, and feature head branch.",
-        practical_exercise: "Push a feature branch to GitHub, navigate to the GitHub repository web UI, open a Pull Request against main, and inspect the unified code diff view.",
-        checkpoint_question: "Why are Pull Requests used in team software development?",
-        checkpoint_options: [
-          "To force developers to re-install Git every week.",
-          "To enable code reviews, automated CI test runs, and peer feedback before merging code into main branches.",
-          "To speed up CSS flexbox rendering.",
-          "To compile database migrations into SQL files."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Pull Requests foster quality control through peer code reviews and automated CI checks before code enters production."
-      },
-      {
-        id: "git-l5",
-        course_id: "course-git-github",
-        title: "Resolving Merge Conflicts",
-        lesson_type: "exercise",
-        sequence_order: 5,
-        estimated_minutes: 20,
-        objective: "Identify conflict markers (<<<<<<< HEAD), resolve competing edits across branches, and finalize merge commits.",
-        concept_guide: `A Merge Conflict occurs when Git tries to merge two branches that modified the exact same lines of code in conflicting ways, or when one branch deleted a file that another branch edited.
-
-Git marks conflicting files and inserts conflict markers directly into the code:
-- \`<<<<<<< HEAD\`: Indicates changes on your current active branch.
-- \`=======\`: Separator dividing opposing changes.
-- \`>>>>>>> branch-name\`: Indicates incoming changes from the branch being merged.
-
-To resolve:
-1. Inspect conflicting files and edit code to keep intended changes.
-2. Remove conflict marker lines (\`<<<<<<<\`, \`=======\`, \`>>>>>>>\`).
-3. Stage resolved files (\`git add\`) and commit (\`git commit\`).`,
-        code_example: `<<<<<<< HEAD
-const API_PORT = process.env.PORT || 3000;
-=======
-const API_PORT = process.env.PORT || 8080;
->>>>>>> feature/port-update
-
-/* RESOLVED EDITED CODE */
-const API_PORT = process.env.PORT || 3000;`,
-        code_explanation: "Shows raw Git conflict markers around opposing line edits and the resulting clean resolved code.",
-        practical_exercise: "Simulate a merge conflict by editing line 1 of README.md on two different branches, attempting a merge, removing conflict markers, and committing the resolution.",
-        checkpoint_question: "How do you complete a merge after manually resolving conflict markers in your code editor?",
-        checkpoint_options: [
-          "Run git abort --force.",
-          "Stage the resolved files with git add and execute git commit.",
-          "Delete the .git hidden directory.",
-          "Restart the computer operating system."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Staging the resolved files with git add signals to Git that conflicts are settled, allowing git commit to record the merge."
+        checkpoint_explanation: "Reassigning a const identifier triggers a TypeError."
       }
     ]
   },
@@ -778,6 +555,7 @@ const API_PORT = process.env.PORT || 3000;`,
     title: "React & Component Architecture",
     description: "Build declarative component hierarchies, props flow, useState, useEffect side effects, custom hooks, and predictable state.",
     category: "frontend",
+    domain: "full_stack",
     difficulty: "Intermediate",
     estimated_minutes: 160,
     lessons: [
@@ -788,286 +566,364 @@ const API_PORT = process.env.PORT || 3000;`,
         lesson_type: "concept",
         sequence_order: 1,
         estimated_minutes: 20,
-        objective: "Understand Virtual DOM reconciliation, declarative component rendering, and JSX syntax transpilation.",
-        concept_guide: `React is a declarative component-driven JavaScript library for building user interfaces. Instead of manually manipulating DOM nodes using imperative JavaScript (\`document.createElement\`), React developers declare what the UI should look like for a given state using JSX (JavaScript XML).
-
-Virtual DOM: React maintains a lightweight Virtual DOM representation in memory. When state updates occur, React renders a new Virtual DOM tree, performs a diffing algorithm (Reconciliation), and efficiently updates only the changed real DOM nodes.
-
-JSX Rules:
-1. Component function names MUST start with a capital letter (\`MyComponent\`).
-2. JSX tags must return a single root element or Fragment (\`<>\`).
-3. Use \`className\` instead of \`class\` and \`htmlFor\` instead of \`for\`.
-4. Embed JavaScript expressions inside curly braces \`{expression}\`.`,
-        code_example: `export function LearnerCard({ name, role }: { name: string; role: string }) {
-  const isLead = role === "Lead Developer";
-
-  return (
-    <div className="card-container">
-      <h3 className="text-sm font-bold">{name}</h3>
-      <span className={isLead ? "badge-gold" : "badge-blue"}>
-        {role}
-      </span>
-    </div>
-  );
+        objective: "Understand Virtual DOM reconciliation and declarative component rendering.",
+        concept_guide: `React uses a virtual DOM tree in memory to calculate minimal UI diff updates.`,
+        code_example: `export function AppCard({ title }: { title: string }) {
+  return <div className="card"><h3>{title}</h3></div>;
 }`,
-        code_explanation: "Demonstrates a clean functional React component returning JSX with conditional class styling and embedded variable expressions.",
-        practical_exercise: "Build a functional React component named `CourseBadge` that accepts `title` and `difficulty` as props and renders styled HTML with dynamic conditional colors.",
-        checkpoint_question: "Why must React components return a single root element or Fragment (<>...</>)?",
+        code_explanation: "Functional component returning JSX markup.",
+        practical_exercise: "Build a custom React badge component accepting status props.",
+        checkpoint_question: "Why must JSX components return a single root element?",
         checkpoint_options: [
-          "To allow CSS grid to render 3D graphics.",
-          "Because JSX transpiles into React.createElement function calls which expect a single parent element returned.",
-          "Because web browsers reject pages with more than 1 HTML tag.",
-          "To automatically save component data to local storage."
+          "For 3D graphics.",
+          "Because JSX transpiles into React.createElement function calls expecting one parent node.",
+          "To enable SSL encryption.",
+          "To format CSS fonts."
         ],
         checkpoint_correct_index: 1,
-        checkpoint_explanation: "JSX is transpiled into JavaScript function calls, requiring a single enclosing root element or fragment."
-      },
-      {
-        id: "react-l2",
-        course_id: "course-react-architecture",
-        title: "Props Unidirectional Data Flow",
-        lesson_type: "exercise",
-        sequence_order: 2,
-        estimated_minutes: 25,
-        objective: "Pass read-only props down component hierarchies and pass event handler callbacks up for parent state updates.",
-        concept_guide: `Data in React flows unidirectionally downward from parent components to child components via \`props\` (properties).
-
-Props Principles:
-- Props are IMMUTABLE read-only objects. A child component must NEVER attempt to modify its own props.
-- To communicate from child to parent, the parent passes a callback function down as a prop. When an event occurs in the child, it invokes the parent callback, allowing the parent to update its state!`,
-        code_example: `// Child Component
-function FilterButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={active ? "bg-primary text-white" : "bg-muted text-gray font-normal"}
-    >
-      {label}
-    </button>
-  );
-}`,
-        code_explanation: "Demonstrates a presentational child component receiving immutable props and executing a parent callback on click.",
-        practical_exercise: "Create a `LessonStepper` component where parent state tracks active lesson index and child `NextButton` and `PrevButton` trigger parent index increment and decrement callbacks.",
-        checkpoint_question: "What happens if a child component attempts to directly mutate a prop (e.g. props.title = 'New Title')?",
-        checkpoint_options: [
-          "React updates the parent component state automatically.",
-          "React throws a runtime error because props are immutable read-only objects.",
-          "The browser reloads the page.",
-          "The CSS background color turns red."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Props are strictly read-only inputs in React; mutating props violates unidirectional data flow and triggers errors."
-      },
-      {
-        id: "react-l3",
-        course_id: "course-react-architecture",
-        title: "State Management with useState Hook",
-        lesson_type: "exercise",
-        sequence_order: 3,
-        estimated_minutes: 25,
-        objective: "Declare component state, perform immutable state updates, and handle controlled form inputs using useState.",
-        concept_guide: `State represents data that changes over time within a component. Calling \`useState(initialValue)\` returns an array containing two elements:
-1. Current State Value.
-2. Setter Function: Function used to update state and trigger a component re-render.
-
-State Update Rules:
-- Never mutate state directly (\`state.count = 5\` ❌). Always call the setter function (\`setCount(5)\` ✅).
-- When next state depends on previous state, pass a functional updater (\`setCount(prev => prev + 1)\`) to avoid closure stale state bugs during batched updates.`,
-        code_example: `import { useState } from "react";
-
-export function Counter() {
-  const [count, setCount] = useState(0);
-
-  const handleIncrement = () => {
-    setCount((prevCount) => prevCount + 1);
-  };
-
-  return (
-    <button onClick={handleIncrement} className="btn-primary">
-      Completed Lessons: {count}
-    </button>
-  );
-}`,
-        code_explanation: "Demonstrates useState hook declaration and functional state updater execution on button click.",
-        practical_exercise: "Build a controlled search input component using useState where typing updates query state and filters an array of course titles in real-time.",
-        checkpoint_question: "Why should you pass a functional updater (setCount(prev => prev + 1)) when deriving next state from current state?",
-        checkpoint_options: [
-          "It forces React to bypass Virtual DOM diffing.",
-          "It guarantees working with the most up-to-date state value even during batched asynchronous state updates.",
-          "It converts the state value into a database string.",
-          "It prevents the button from being double-clicked."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Functional state updaters receive the guaranteed latest pending state value during React batched update cycles."
-      },
-      {
-        id: "react-l4",
-        course_id: "course-react-architecture",
-        title: "Side Effects & useEffect Lifecycle",
-        lesson_type: "concept",
-        sequence_order: 4,
-        estimated_minutes: 25,
-        objective: "Execute data fetching, DOM subscriptions, and timer side effects while managing dependency arrays and cleanup functions.",
-        concept_guide: `Side effects are operations that interact with the outside world beyond React's pure rendering cycle (e.g. API fetching, DOM listeners, timers, web sockets).
-
-The \`useEffect(effectFunction, dependencyArray)\` hook synchronizes side effects with component lifecycle:
-1. No Dependency Array (\`useEffect(fn)\`): Runs after EVERY render.
-2. Empty Dependency Array (\`useEffect(fn, [])\`): Runs ONCE after initial component mount.
-3. Specific Dependencies (\`useEffect(fn, [id])\`): Runs on initial mount AND whenever specified dependency values change.
-
-Effect Cleanup: Returning a cleanup function from \`useEffect\` ensures timer intervals, event listeners, and API subscriptions are cleaned up before component unmount or re-render.`,
-        code_example: `useEffect(() => {
-  let isMounted = true;
-
-  async function loadCourse() {
-    const data = await fetchCourseData(courseId);
-    if (isMounted) setCourse(data);
-  }
-
-  loadCourse();
-
-  return () => {
-    isMounted = false; // Cleanup flag preventing memory leaks
-  };
-}, [courseId]);`,
-        code_explanation: "Demonstrates useEffect data fetching scoped to courseId with a cleanup flag preventing state updates on unmounted components.",
-        practical_exercise: "Write a useEffect hook that attaches a window resize event listener to update a `windowWidth` state variable and returns a cleanup function calling `removeEventListener`.",
-        checkpoint_question: "When does the cleanup function returned from a useEffect hook execute?",
-        checkpoint_options: [
-          "Only when the browser window closes.",
-          "Before the component unmounts and before re-running the effect on dependency changes.",
-          "Immediately before the first initial render.",
-          "Whenever a user clicks a button."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Cleanup functions execute before component unmounting and prior to re-executing the effect when dependencies change."
-      },
-      {
-        id: "react-l5",
-        course_id: "course-react-architecture",
-        title: "Custom Hooks & Logic Reusability",
-        lesson_type: "exercise",
-        sequence_order: 5,
-        estimated_minutes: 30,
-        objective: "Extract component state and effect logic into reusable custom hooks prefixed with use...",
-        concept_guide: `Custom Hooks are JavaScript functions whose names start with \`use\` and that call other React hooks (\`useState\`, \`useEffect\`, \`useCallback\`).
-
-Custom hooks allow developers to extract complex stateful business logic out of UI component views into reusable, testable utility functions!`,
-        code_example: `import { useState, useEffect } from "react";
-
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(storedValue));
-  }, [key, storedValue]);
-
-  return [storedValue, setStoredValue] as const;
-}`,
-        code_explanation: "Custom hook encapsulating localStorage synchronization with generic TypeScript typing.",
-        practical_exercise: "Build a custom hook named `useFetch(url)` returning `{ data, loading, error }` and consume it inside a `CourseList` component.",
-        checkpoint_question: "What naming convention must all React custom hooks follow?",
-        checkpoint_options: [
-          "Must end with ...Component",
-          "Must start with the lowercase prefix 'use' (e.g. useCourseProgress)",
-          "Must be written in capital letters (e.g. USE_DATA)",
-          "Must start with 'get'"
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "React requires custom hooks to start with 'use' so linter rules can verify hook usage rules automatically."
-      },
-      {
-        id: "react-l6",
-        course_id: "course-react-architecture",
-        title: "Interactive Course Application Capstone",
-        lesson_type: "project",
-        sequence_order: 6,
-        estimated_minutes: 35,
-        objective: "Build a full-featured interactive React learning application with tabbed views, custom hooks, and persistent completion state.",
-        concept_guide: `Assembling scalable React applications requires organizing components into clear directory structures, maintaining clean prop interfaces, and using custom hooks for state management.`,
-        code_example: `export default function CourseWorkspaceApp() {
-  const { course, loading } = useCourseData();
-  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-
-  if (loading) return <LoadingSpinner />;
-
-  return (
-    <div className="flex h-screen border border-border">
-      <LessonSidebar course={course} activeId={activeLessonId} onSelect={setActiveLessonId} />
-      <LessonWorkspace lessonId={activeLessonId} />
-    </div>
-  );
-}`,
-        code_explanation: "Demonstrates main workspace component layout composing loading spinner, sidebar stepper, and active workspace view.",
-        practical_exercise: "Build an interactive course learning workspace application with lesson selection sidebar, reading area, and progress calculation.",
-        checkpoint_question: "Which component architecture pattern promotes high maintainability and testability in React applications?",
-        checkpoint_options: [
-          "Writing all application code inside a single 5000-line index.js file.",
-          "Decomposing UI into small, focused presentational components and extracting stateful logic into custom hooks.",
-          "Using inline style attributes for every element.",
-          "Storing all state in global window variables."
-        ],
-        checkpoint_correct_index: 1,
-        checkpoint_explanation: "Separating UI into modular presentational components and isolating stateful logic in custom hooks promotes maintainability."
+        checkpoint_explanation: "JSX compiles to function calls expecting a single root expression."
       }
     ]
   }
 ]
 
 // ============================================================================
-// COURSE SERVICE HELPERS (STANDALONE)
+// DOMAIN 3: UI/UX DESIGN COURSES
+// ============================================================================
+export const UI_UX_COURSES: Course[] = [
+  {
+    id: "course-ux-research",
+    title: "UX Research & User Discovery",
+    description: "Master qualitative user interviews, persona creation, empathy maps, journey mapping, and problem framing.",
+    category: "design",
+    domain: "ui_ux",
+    difficulty: "Beginner",
+    estimated_minutes: 120,
+    lessons: [
+      {
+        id: "ux-res-l1",
+        course_id: "course-ux-research",
+        title: "User Interviewing & Qualitative Discovery",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Design non-leading user interview protocols to uncover core user pain points and motivations.",
+        concept_guide: `UX Research establishes user needs before building products. Qualitative user interviews focus on understanding behaviors, attitudes, and friction points through open-ended questions.`,
+        code_example: `/* Non-Leading Interview Protocol */
+Bad: "Did you find our navigation menu confusing?"
+Good: "Walk me through how you attempted to find course information on the homepage."`,
+        code_explanation: "Contrasts leading biased questions against open behavioral prompt techniques.",
+        practical_exercise: "Draft a 5-question qualitative interview script for testing a new mobile learning app onboarding flow.",
+        checkpoint_question: "Why should UX researchers avoid leading questions during user interviews?",
+        checkpoint_options: [
+          "Leading questions slow down audio recording.",
+          "Leading questions bias participant answers toward expected responses, invalidating real user insights.",
+          "Leading questions require legal contracts.",
+          "Leading questions disable Figma prototypes."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Leading questions introduce confirmation bias and obscure true user behaviors."
+      }
+    ]
+  },
+  {
+    id: "course-figma-design-systems",
+    title: "Figma & UI Design Systems",
+    description: "Construct scalable Figma component libraries, auto-layout spatial constraints, design tokens, and variants.",
+    category: "design",
+    domain: "ui_ux",
+    difficulty: "Intermediate",
+    estimated_minutes: 135,
+    lessons: [
+      {
+        id: "figma-l1",
+        course_id: "course-figma-design-systems",
+        title: "Auto Layout & Spatial Layout Physics",
+        lesson_type: "exercise",
+        sequence_order: 1,
+        estimated_minutes: 25,
+        objective: "Apply Figma Auto Layout padding, gap distribution, and fill-container responsiveness.",
+        concept_guide: `Auto Layout in Figma mirrors CSS Flexbox. It allows UI components to resize dynamically based on text content and container constraints.`,
+        code_example: `Figma Auto Layout Specs:
+Direction: Vertical Column
+Padding: 24px Top/Bottom, 32px Left/Right
+Gap: 16px
+Child Constraints: Fill Container (Horizontal)`,
+        code_explanation: "Translates responsive component layout rules into Figma Auto Layout parameters.",
+        practical_exercise: "Build a responsive button component in Figma with default, hover, and disabled state variants using Auto Layout.",
+        checkpoint_question: "Which Figma Auto Layout setting allows a child frame to expand fluidly with its parent container width?",
+        checkpoint_options: [
+          "Fixed Width",
+          "Fill Container",
+          "Hug Contents",
+          "Absolute Position"
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Fill Container causes child layers to adapt fluidly to parent frame dimensions."
+      }
+    ]
+  }
+]
+
+// ============================================================================
+// DOMAIN 4: CLOUD & DEVOPS COURSES
+// ============================================================================
+export const DEVOPS_COURSES: Course[] = [
+  {
+    id: "course-docker-containers",
+    title: "Docker & Container Architecture",
+    description: "Build lightweight container images, multi-stage Dockerfiles, port mappings, volumes, and Docker Compose environments.",
+    category: "devops",
+    domain: "devops",
+    difficulty: "Intermediate",
+    estimated_minutes: 130,
+    lessons: [
+      {
+        id: "docker-l1",
+        course_id: "course-docker-containers",
+        title: "Container Concepts & Dockerfile Instructions",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Understand OS-level virtualization, container image layering, and Dockerfile commands.",
+        concept_guide: `Containers package code and all dependencies into lightweight isolated execution environments. Unlike virtual machines, containers share the host OS kernel.`,
+        code_example: `FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]`,
+        code_explanation: "Multi-layer Dockerfile for a production Node.js application.",
+        practical_exercise: "Write a Dockerfile for a Python FastAPI microservice specifying base image, workdir, dependency installation, and start command.",
+        checkpoint_question: "What is the primary difference between a Docker container and a traditional Virtual Machine (VM)?",
+        checkpoint_options: [
+          "VMs run faster than containers.",
+          "Containers share the host OS kernel without needing full guest operating systems per instance.",
+          "Containers require dedicated hardware servers.",
+          "VMs do not use disk space."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Containers virtualize at the OS layer sharing host kernel resources, making them faster and lighter than full VMs."
+      }
+    ]
+  }
+]
+
+// ============================================================================
+// DOMAIN 5: CYBERSECURITY COURSES
+// ============================================================================
+export const CYBERSECURITY_COURSES: Course[] = [
+  {
+    id: "course-cyber-sec-fundamentals",
+    title: "Cybersecurity Principles & Threat Defense",
+    description: "Understand the CIA Triad, threat vectors, network encryption protocols, OWASP Top 10 vulnerabilities, and security operations.",
+    category: "security",
+    domain: "cybersecurity",
+    difficulty: "Beginner",
+    estimated_minutes: 130,
+    lessons: [
+      {
+        id: "sec-l1",
+        course_id: "course-cyber-sec-fundamentals",
+        title: "The CIA Triad & Threat Vector Analysis",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Apply Confidentiality, Integrity, and Availability principles to security policy design.",
+        concept_guide: `The CIA Triad is the core security model:
+- Confidentiality: Protecting data from unauthorized exposure.
+- Integrity: Preventing unauthorized data alteration.
+- Availability: Ensuring reliable access to systems for authorized users.`,
+        code_example: `Security Matrix:
+Confidentiality Control -> TLS 1.3 Encryption & AES-256
+Integrity Control       -> SHA-256 Cryptographic Hashes
+Availability Control    -> Multi-Region Redundant Load Balancing`,
+        code_explanation: "Maps security controls to the 3 pillars of the CIA Triad.",
+        practical_exercise: "Analyze a data breach scenario and categorize affected systems under CIA triad failures.",
+        checkpoint_question: "Which pillar of the CIA Triad is compromised when an attacker alters financial record amounts in a database?",
+        checkpoint_options: [
+          "Confidentiality",
+          "Integrity",
+          "Availability",
+          "Authentication"
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Integrity ensures data remains accurate and unaltered by unauthorized parties."
+      }
+    ]
+  }
+]
+
+// ============================================================================
+// DOMAIN 6: NEUTRAL GENERAL TECH COURSES (FALLBACK FOR UNKNOWN GOALS)
+// ============================================================================
+export const GENERAL_TECH_COURSES: Course[] = [
+  {
+    id: "course-tech-problem-solving",
+    title: "Problem Solving & Computational Logic",
+    description: "Master algorithmic thinking, decomposition, pattern recognition, and structured technical problem solving.",
+    category: "general",
+    domain: "general",
+    difficulty: "Beginner",
+    estimated_minutes: 110,
+    lessons: [
+      {
+        id: "gen-l1",
+        course_id: "course-tech-problem-solving",
+        title: "Decomposition & Algorithmic Thinking",
+        lesson_type: "concept",
+        sequence_order: 1,
+        estimated_minutes: 20,
+        objective: "Break complex real-world problems into manageable, testable sub-problems.",
+        concept_guide: `Computational thinking involves breaking down ambiguous challenges into explicit step-by-step algorithms.`,
+        code_example: `# Pseudocode for Problem Decomposition
+1. Identify Inputs & Expected Outputs
+2. Divide into Sub-tasks (Validation, Processing, Response)
+3. Test Sub-tasks independently`,
+        code_explanation: "Standard step-by-step problem breakdown template.",
+        practical_exercise: "Write pseudo-code step sequence for automating email notification dispatches.",
+        checkpoint_question: "What does problem decomposition mean in computer science?",
+        checkpoint_options: [
+          "Deleting broken code files.",
+          "Breaking a complex problem into smaller, solvable sub-problems.",
+          "Formatting text strings.",
+          "Installing software updates."
+        ],
+        checkpoint_correct_index: 1,
+        checkpoint_explanation: "Decomposition breaks complex problems down into manageable components."
+      }
+    ]
+  }
+]
+
+// Map of all domain catalogs
+export const DOMAIN_CATALOGS: Record<string, Course[]> = {
+  data_analytics: DATA_ANALYTICS_COURSES,
+  full_stack: FULL_STACK_COURSES,
+  ui_ux: UI_UX_COURSES,
+  devops: DEVOPS_COURSES,
+  cybersecurity: CYBERSECURITY_COURSES,
+  general: GENERAL_TECH_COURSES,
+}
+
+// Flat list of all available courses for lookup
+export const ALL_COURSES: Course[] = [
+  ...DATA_ANALYTICS_COURSES,
+  ...FULL_STACK_COURSES,
+  ...UI_UX_COURSES,
+  ...DEVOPS_COURSES,
+  ...CYBERSECURITY_COURSES,
+  ...GENERAL_TECH_COURSES,
+]
+
+// ============================================================================
+// DYNAMIC ADAPTIVE COURSE SELECTION & RECOMMENDATION ENGINE
 // ============================================================================
 
 export function getStandaloneCourses(
   userGoal?: string,
+  userLevel?: string,
   activeModuleTitles: string[] = []
 ): Course[] {
-  const goalLower = (userGoal || "").toLowerCase()
+  const goalText = (userGoal || "").trim().toLowerCase()
   const pathContextText = activeModuleTitles.join(" ").toLowerCase()
 
-  return CONST_COURSES.map((course) => {
+  // Determine Primary Domain based on Learner Goal
+  let domainKey: "data_analytics" | "full_stack" | "ui_ux" | "devops" | "cybersecurity" | "general" = "general"
+
+  if (
+    goalText.includes("data") ||
+    goalText.includes("analyst") ||
+    goalText.includes("analytics") ||
+    goalText.includes("python data") ||
+    goalText.includes("pandas") ||
+    goalText.includes("business intelligence") ||
+    goalText.includes("sql analyst")
+  ) {
+    domainKey = "data_analytics"
+  } else if (
+    goalText.includes("web") ||
+    goalText.includes("full-stack") ||
+    goalText.includes("fullstack") ||
+    goalText.includes("frontend") ||
+    goalText.includes("backend") ||
+    goalText.includes("developer") ||
+    goalText.includes("javascript") ||
+    goalText.includes("react") ||
+    goalText.includes("software engineer")
+  ) {
+    domainKey = "full_stack"
+  } else if (
+    goalText.includes("design") ||
+    goalText.includes("ui") ||
+    goalText.includes("ux") ||
+    goalText.includes("figma") ||
+    goalText.includes("product design")
+  ) {
+    domainKey = "ui_ux"
+  } else if (
+    goalText.includes("cloud") ||
+    goalText.includes("devops") ||
+    goalText.includes("aws") ||
+    goalText.includes("docker") ||
+    goalText.includes("system")
+  ) {
+    domainKey = "devops"
+  } else if (
+    goalText.includes("cyber") ||
+    goalText.includes("security") ||
+    goalText.includes("infosec") ||
+    goalText.includes("ethical hacking")
+  ) {
+    domainKey = "cybersecurity"
+  }
+
+  // Select catalog matching domain
+  let catalogToUse = DOMAIN_CATALOGS[domainKey] || GENERAL_TECH_COURSES
+
+  // If goal is generic/missing, show neutral domain-mixed catalog
+  if (domainKey === "general" && (!goalText || goalText === "general tech")) {
+    catalogToUse = [
+      ...GENERAL_TECH_COURSES,
+      ...DATA_ANALYTICS_COURSES.slice(0, 1),
+      ...FULL_STACK_COURSES.slice(0, 1),
+      ...UI_UX_COURSES.slice(0, 1),
+    ]
+  }
+
+  const cleanGoalDisplay = userGoal && userGoal.trim() ? userGoal : "your target domain"
+
+  return catalogToUse.map((course, idx) => {
     let isRec = false
     let recReason = ""
 
-    if (goalLower.includes("full-stack") || goalLower.includes("web")) {
-      if (course.category === "frontend" || course.category === "javascript") {
+    // Domain-aware recommendation logic
+    if (domainKey !== "general") {
+      // First 2 courses in primary domain catalog are recommended by default for goal
+      if (idx === 0 || idx === 1) {
         isRec = true
-        recReason = `Recommended for your ${userGoal || "Web Development"} goal`
-      }
-    } else if (goalLower.includes("backend")) {
-      if (course.category === "backend" || course.category === "database") {
+        recReason = `Recommended for your ${cleanGoalDisplay} goal`
+      } else if (userLevel && course.difficulty.toLowerCase() === userLevel.toLowerCase()) {
         isRec = true
-        recReason = `Recommended for your Backend Engineering path`
-      }
-    } else if (goalLower.includes("frontend")) {
-      if (course.category === "frontend" || course.category === "javascript") {
-        isRec = true
-        recReason = `Recommended for your Frontend Engineering path`
+        recReason = `Matches your ${userLevel} level in ${cleanGoalDisplay}`
       }
     }
 
+    // Check active Learning Path roadmap signals
     if (!isRec && pathContextText) {
+      const cTitle = course.title.toLowerCase()
       if (
-        (course.title.toLowerCase().includes("html") && pathContextText.includes("html")) ||
-        (course.title.toLowerCase().includes("javascript") && pathContextText.includes("javascript")) ||
-        (course.title.toLowerCase().includes("react") && pathContextText.includes("react")) ||
-        (course.title.toLowerCase().includes("node") && pathContextText.includes("node"))
+        (cTitle.includes("python") && pathContextText.includes("python")) ||
+        (cTitle.includes("sql") && pathContextText.includes("sql")) ||
+        (cTitle.includes("html") && pathContextText.includes("html")) ||
+        (cTitle.includes("react") && pathContextText.includes("react")) ||
+        (cTitle.includes("figma") && pathContextText.includes("figma")) ||
+        (cTitle.includes("docker") && pathContextText.includes("docker"))
       ) {
         isRec = true
         recReason = `Complements your active Learning Path roadmap`
       }
-    }
-
-    if (!isRec && (course.id === "course-html-css" || course.id === "course-javascript-fundamentals")) {
-      isRec = true
-      recReason = `Foundational skill recommended for all developers`
     }
 
     return {
@@ -1078,10 +934,12 @@ export function getStandaloneCourses(
   })
 }
 
+// Storage key helper
 function getStorageKey(userId: string): string {
   return `learnpilot_course_completions_${userId}`
 }
 
+// Persistent course progress fetcher
 export async function getUserCompletedCourseLessons(
   supabase: SupabaseClient<Database>,
   userId: string
@@ -1126,6 +984,7 @@ export async function getUserCompletedCourseLessons(
   return []
 }
 
+// Persistent course lesson completion handler
 export async function completeCourseLesson(
   supabase: SupabaseClient<Database>,
   userId: string,
