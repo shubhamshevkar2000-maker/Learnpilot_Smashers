@@ -320,7 +320,7 @@ function OnboardingFlow() {
       LEVEL_OPTIONS.find((l) => l.value === currentLevel)?.title || currentLevel
 
     return (
-      <div className="relative flex min-h-screen flex-col justify-between bg-background px-6 py-8 text-foreground transition-colors duration-300 md:px-12">
+      <div className="relative flex min-h-screen flex-col justify-between bg-background px-4 py-6 text-foreground transition-colors duration-300 sm:px-6 md:px-12 md:py-8">
         <header className="mx-auto flex w-full max-w-[1000px] items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold tracking-[0.25em] text-foreground">
@@ -334,7 +334,7 @@ function OnboardingFlow() {
             <ThemeToggle />
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive min-h-[40px]"
             >
               <LogOut size={13} />
               <span>Sign Out</span>
@@ -342,25 +342,25 @@ function OnboardingFlow() {
           </div>
         </header>
 
-        <main className="mx-auto my-auto w-full max-w-xl py-10">
+        <main className="mx-auto my-auto w-full max-w-xl py-6 sm:py-10">
           <div className="text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.25em] text-primary backdrop-blur-sm">
               <CheckCircle2 size={14} className="text-primary" />
               <span>Onboarding Completed</span>
             </div>
 
-            <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground md:text-5xl">
+            <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground sm:text-3xl md:text-5xl">
               Welcome aboard,{" "}
               <span className="italic text-primary">{displayName || "Learner"}</span>.
             </h1>
 
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+            <p className="mt-4 text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-base">
               Your personalized learning parameters are set. Your profile is ready to anchor your future adaptive orbital path.
             </p>
           </div>
 
           {/* Profile Summary Card */}
-          <div className="mt-8 rounded-3xl border border-border bg-card/75 p-6 backdrop-blur-xl md:p-8">
+          <div className="mt-8 rounded-3xl border border-border bg-card/75 p-5 backdrop-blur-xl sm:p-6 md:p-8">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
                 <ShieldCheck size={16} className="text-primary" />
@@ -371,7 +371,7 @@ function OnboardingFlow() {
                   setIsCompletedState(false)
                   setStep(1)
                 }}
-                className="flex items-center gap-1 text-xs text-primary transition-opacity hover:opacity-80"
+                className="flex items-center gap-1 text-xs text-primary transition-opacity hover:opacity-80 py-1"
               >
                 <Edit3 size={13} />
                 <span>Edit Profile</span>
@@ -415,21 +415,29 @@ function OnboardingFlow() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <MagneticButton
+              onClick={() => router.push("/dashboard")}
+              className="w-full sm:w-auto px-6 py-3 text-xs min-h-[44px]"
+            >
+              <span>Go to Dashboard</span>
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+            </MagneticButton>
+
+            <button
               onClick={() => {
                 setIsCompletedState(false)
                 setStep(1)
               }}
-              className="px-6 py-3 text-xs"
+              className="flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-full border border-border bg-card/60 px-5 py-2.5 text-xs text-muted-foreground transition-colors hover:bg-card hover:text-foreground min-h-[44px]"
             >
               <Edit3 size={14} />
-              <span>Modify Onboarding Responses</span>
-            </MagneticButton>
+              <span>Modify Responses</span>
+            </button>
           </div>
         </main>
 
-        <footer className="mx-auto flex w-full max-w-[1000px] items-center justify-between text-[11px] text-muted-foreground">
+        <footer className="mx-auto flex w-full max-w-[1000px] flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 text-[11px] text-muted-foreground pt-4">
           <span>© {new Date().getFullYear()} LearnPilot</span>
           <span>Learner Profile Active</span>
         </footer>
@@ -439,7 +447,7 @@ function OnboardingFlow() {
 
   // Active Multi-Step Onboarding View
   return (
-    <div className="relative flex min-h-screen flex-col justify-between bg-background px-6 py-8 text-foreground transition-colors duration-300 md:px-12">
+    <div className="relative flex min-h-screen flex-col justify-between bg-background px-4 py-6 text-foreground transition-colors duration-300 sm:px-6 md:px-12 md:py-8">
       {/* Top Bar */}
       <header className="mx-auto flex w-full max-w-[1000px] items-center justify-between">
         <div className="flex items-center gap-3">

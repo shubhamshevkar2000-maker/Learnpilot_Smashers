@@ -84,15 +84,15 @@ function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col justify-between bg-background px-6 py-8 text-foreground transition-colors duration-300 md:px-12">
+    <div className="relative flex min-h-screen flex-col justify-between bg-background px-4 py-6 text-foreground transition-colors duration-300 sm:px-6 md:px-12 md:py-8">
       {/* Top Bar */}
       <header className="mx-auto flex w-full max-w-[1200px] items-center justify-between">
         <Link
           href="/"
-          className="group flex items-center gap-2 text-xs font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
+          className="group flex items-center gap-2 text-xs font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80 min-h-[44px] min-w-[44px]"
         >
           <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-0.5" />
-          LEARNPILOT
+          <span>LEARNPILOT</span>
         </Link>
         <div className="flex items-center gap-3">
           <ThemeToggle />
@@ -100,26 +100,25 @@ function LoginForm() {
       </header>
 
       {/* Main Authentication Card */}
-      <main className="mx-auto my-auto w-full max-w-md py-10">
-        <div className="mb-8 text-left">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.3em] text-primary backdrop-blur-sm">
+      <main className="mx-auto my-auto w-full max-w-md py-6 sm:py-10">
+        <div className="mb-6 sm:mb-8 text-left">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.25em] sm:tracking-[0.3em] text-primary backdrop-blur-sm">
             <Sparkles size={12} />
             <span>Welcome Back</span>
           </div>
-          <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground md:text-4xl">
+          <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground sm:text-3xl md:text-4xl">
             Continue your
             <br />
             <span className="italic text-primary">learning path.</span>
           </h1>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-2.5 text-xs sm:text-sm text-muted-foreground">
             Sign in to access your evolving orbital curriculum.
           </p>
         </div>
 
-
         {/* Error Banner */}
         {errorMessage && (
-          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive">
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 p-3.5 sm:p-4 text-xs text-destructive">
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <p className="leading-relaxed">{errorMessage}</p>
           </div>
@@ -127,7 +126,7 @@ function LoginForm() {
 
         {/* Info Banner */}
         {infoMessage && (
-          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/10 p-4 text-xs text-foreground">
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/10 p-3.5 sm:p-4 text-xs text-foreground">
             {infoMessage}
           </div>
         )}
@@ -148,7 +147,7 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@example.com"
-              className="w-full rounded-xl border border-border bg-card/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-xl border border-border bg-card/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[44px]"
             />
           </div>
 
@@ -162,7 +161,7 @@ function LoginForm() {
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                className="text-xs text-muted-foreground transition-colors hover:text-primary py-1"
               >
                 Forgot password?
               </Link>
@@ -176,12 +175,12 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full rounded-xl border border-border bg-card/80 px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-xl border border-border bg-card/80 px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[44px]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-muted-foreground transition-colors hover:text-foreground min-h-[40px] min-w-[40px] flex items-center justify-center"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -193,7 +192,7 @@ function LoginForm() {
             <MagneticButton
               type="submit"
               disabled={loading}
-              className="w-full justify-center py-3.5 text-sm"
+              className="w-full justify-center py-3.5 text-sm min-h-[44px]"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -214,7 +213,7 @@ function LoginForm() {
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
+            className="font-medium text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline p-1"
           >
             Create account
           </Link>
@@ -222,7 +221,7 @@ function LoginForm() {
       </main>
 
       {/* Footer */}
-      <footer className="mx-auto flex w-full max-w-[1200px] items-center justify-between text-[11px] text-muted-foreground">
+      <footer className="mx-auto flex w-full max-w-[1200px] flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 text-[11px] text-muted-foreground pt-4">
         <span>© {new Date().getFullYear()} LearnPilot</span>
         <div className="flex items-center gap-6">
           <span className="hover:text-foreground cursor-pointer transition-colors">Privacy</span>
@@ -232,4 +231,3 @@ function LoginForm() {
     </div>
   )
 }
-
