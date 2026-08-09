@@ -7,6 +7,7 @@ import {
   Compass,
   Layers,
   BookOpen,
+  Calendar,
   Bot,
   CheckCircle,
   BarChart3,
@@ -47,11 +48,12 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
+  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "#" },
+  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach", active: true },
-  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "#" },
-  { id: "progress", label: "Progress", icon: BarChart3, href: "#" },
+  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
+  { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
   { id: "settings", label: "Settings", icon: Settings, href: "#" },
 ]
@@ -61,6 +63,112 @@ interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
+}
+
+function parseInline(text: string, isUser: boolean) {
+  const parts = text.split(/(\*\*.*?\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return (
+        <strong
+          key={i}
+          className={isUser ? "font-semibold text-primary-foreground" : "font-semibold text-foreground"}
+        >
+          {part.slice(2, -2)}
+        </strong>
+      )
+    }
+    return part
+  })
+}
+
+function FormattedMessage({ content, isUser }: { content: string; isUser: boolean }) {
+  if (isUser) {
+    return <div className="whitespace-pre-wrap font-sans break-words">{content}</div>
+  }
+
+  const blocks = content.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean)
+
+  return (
+    <div className="space-y-3 font-sans leading-relaxed text-xs break-words">
+      {blocks.map((block, idx) => {
+        const lines = block.split("\n").map((l) => l.trim()).filter(Boolean)
+
+        const isAllNumbered = lines.length > 0 && lines.every((l) => /^\d+\.\s+/.test(l))
+        const isAllBullet = lines.length > 0 && lines.every((l) => /^[-*]\s+/.test(l))
+
+        if (isAllNumbered) {
+          return (
+            <ol key={idx} className="list-decimal pl-4 space-y-1.5 my-1.5">
+              {lines.map((line, lIdx) => {
+                const itemText = line.replace(/^\d+\.\s+/, "")
+                return (
+                  <li key={lIdx} className="pl-1 leading-relaxed">
+                    {parseInline(itemText, isUser)}
+                  </li>
+                )
+              })}
+            </ol>
+          )
+        }
+
+        if (isAllBullet) {
+          return (
+            <ul key={idx} className="list-disc pl-4 space-y-1.5 my-1.5">
+              {lines.map((line, lIdx) => {
+                const itemText = line.replace(/^[-*]\s+/, "")
+                return (
+                  <li key={lIdx} className="pl-1 leading-relaxed">
+                    {parseInline(itemText, isUser)}
+                  </li>
+                )
+              })}
+            </ul>
+          )
+        }
+
+        if (block.startsWith("### ") || block.startsWith("## ") || block.startsWith("# ")) {
+          const headingText = block.replace(/^#{1,3}\s+/, "")
+          return (
+            <h4 key={idx} className="text-xs font-semibold text-foreground pt-1">
+              {parseInline(headingText, isUser)}
+            </h4>
+          )
+        }
+
+        return (
+          <div key={idx} className="space-y-1">
+            {lines.map((line, lIdx) => {
+              if (/^\d+\.\s+/.test(line)) {
+                const itemText = line.replace(/^\d+\.\s+/, "")
+                const num = line.match(/^(\d+)\./)?.[1]
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-1.5 my-1">
+                    <span className="font-medium text-foreground/90 shrink-0">{num}.</span>
+                    <span>{parseInline(itemText, isUser)}</span>
+                  </div>
+                )
+              }
+              if (/^[-*]\s+/.test(line)) {
+                const itemText = line.replace(/^[-*]\s+/, "")
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-1.5 my-1">
+                    <span className="text-primary shrink-0">•</span>
+                    <span>{parseInline(itemText, isUser)}</span>
+                  </div>
+                )
+              }
+              return (
+                <p key={lIdx} className="leading-relaxed">
+                  {parseInline(line, isUser)}
+                </p>
+              )
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function AICoachPage() {
@@ -409,7 +517,7 @@ function AICoachContent() {
                     : "bg-card border border-border text-foreground rounded-tl-xs"
                 }`}
               >
-                <div className="whitespace-pre-wrap font-sans">{msg.content}</div>
+                <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
                 <div
                   className={`text-[9px] text-right mt-1 opacity-70 ${
                     msg.role === "user" ? "text-primary-foreground" : "text-muted-foreground"

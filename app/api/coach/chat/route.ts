@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import Groq from "groq-sdk"
+import { retrieveRAGContext } from "@/lib/rag/retriever"
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,13 +76,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 5. Construct deeply personalized system context (Phase 2)
+    // 5. Construct deeply personalized system context with RAG Grounding
     const displayName = (profile.display_name || "Learner").trim().slice(0, 100)
     const learningGoal = (profile.learning_goal || "General Skill Mastery").trim().slice(0, 300)
     const desiredOutcome = (profile.desired_outcome || "Achieve proficiency").trim().slice(0, 300)
     const currentLevel = (profile.current_level || "unknown").toLowerCase()
     const dailyMinutes = profile.available_daily_minutes ? Math.min(Math.max(profile.available_daily_minutes, 5), 480) : 30
     const targetDate = profile.target_date ? String(profile.target_date).slice(0, 20) : "Not set"
+
+    // Retrieve real RAG Grounding Context (Supabase Active Plan + Course Catalog)
+    const { fullRAGContext } = await retrieveRAGContext({
+      supabase,
+      userId: user.id,
+      userQuery: String(lastMsg.content),
+      learningGoal,
+    })
 
     // Depth & Pacing guidance based on current_level and available_daily_minutes
     let depthGuidance = ""
@@ -114,6 +123,9 @@ AUTHENTICATED LEARNER CONTEXT:
 - Available Daily Time: ${dailyMinutes} minutes/day
 - Target Goal Date: ${targetDate}
 
+REAL RETRIEVED KNOWLEDGE BASE (RAG):
+${fullRAGContext}
+
 PERSONALIZED COACHING DIRECTIVES:
 1. ADAPTATION: ${depthGuidance}
 2. TIME CONSTRAINT: ${pacingGuidance} Never recommend study routines or schedules exceeding ${dailyMinutes} minutes per day.
@@ -121,7 +133,8 @@ PERSONALIZED COACHING DIRECTIVES:
 4. BEHAVIOR: Be supportive, structured, direct, and actionable. Avoid generic fluff or repetitive boilerplate disclaimers.
 5. AMBIGUITY: If a learner's query is broad, give a clear initial answer and ask 1 focused follow-up question.
 6. GROUND TRUTH: Do NOT invent completed lessons, test scores, or progress percentages. Only reference facts provided in this prompt.
-7. Addressing: Address ${displayName} directly as their personal AI coach.`
+7. Addressing: Address ${displayName} directly as their personal AI coach.
+8. GROUNDING: Ground your advice in the learner's active curriculum and real course materials provided above whenever relevant.`
 
     // 6. Format recent message history (prevent context overflow)
     const formattedHistory = messages.slice(-8).map((m: { role: string; content: string }) => ({

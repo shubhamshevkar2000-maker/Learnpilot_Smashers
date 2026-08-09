@@ -75,19 +75,56 @@ export async function getActiveCurriculumFoundation(
     console.error("Error fetching module activities:", activitiesFetchError)
   }
 
+  // 4. Fetch learner profile daily budget for backward-compatible fallback calculation
+  const { data: prof } = await supabase
+    .from("learner_profiles")
+    .select("available_daily_minutes")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  const dailyBudget = prof?.available_daily_minutes ? Math.max(prof.available_daily_minutes, 15) : 30
+  let currentDay = 1
+  let currentAccumulated = 0
+
   const activityMap = new Map<string, ModuleActivity[]>()
   if (activities) {
-    for (const act of activities as ModuleActivity[]) {
-      const list = activityMap.get(act.module_id) || []
-      list.push(act)
-      activityMap.set(act.module_id, list)
+    for (const rawAct of activities as ModuleActivity[]) {
+      const estMins =
+        typeof rawAct.estimated_minutes === "number" && rawAct.estimated_minutes > 0
+          ? rawAct.estimated_minutes
+          : 20
+
+      let assignedDay = rawAct.day_number
+      if (typeof assignedDay !== "number" || assignedDay <= 0) {
+        if (currentAccumulated > 0 && currentAccumulated + estMins > dailyBudget) {
+          currentDay += 1
+          currentAccumulated = 0
+        }
+        assignedDay = currentDay
+        currentAccumulated += estMins
+      }
+
+      const processedAct: ModuleActivity = {
+        ...rawAct,
+        estimated_minutes: estMins,
+        day_number: assignedDay,
+      }
+
+      const list = activityMap.get(processedAct.module_id) || []
+      list.push(processedAct)
+      activityMap.set(processedAct.module_id, list)
     }
   }
 
-  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => ({
-    ...mod,
-    activities: activityMap.get(mod.id) || [],
-  }))
+  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => {
+    const acts = activityMap.get(mod.id) || []
+    const sumMins = acts.reduce((acc, a) => acc + (a.estimated_minutes || 20), 0)
+    return {
+      ...mod,
+      estimated_minutes: sumMins > 0 ? sumMins : mod.estimated_minutes,
+      activities: acts,
+    }
+  })
 
   return {
     plan: existingPlan as LearningPlan,

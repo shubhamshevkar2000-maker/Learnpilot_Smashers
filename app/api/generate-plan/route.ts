@@ -305,6 +305,10 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
       )
     }
 
+    const dailyBudget = profile.available_daily_minutes ? Math.max(profile.available_daily_minutes, 15) : 30
+    let currentDay = 1
+    let currentDayAccumulated = 0
+
     for (const m of parsed.modules) {
       if (!m.title || !m.sequence_order) {
         return NextResponse.json(
@@ -326,6 +330,14 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
             { status: 422 }
           )
         }
+
+        const estMins = a.estimated_minutes || 30
+        if (currentDayAccumulated > 0 && currentDayAccumulated + estMins > dailyBudget) {
+          currentDay += 1
+          currentDayAccumulated = 0
+        }
+        ;(a as any).day_number = currentDay
+        currentDayAccumulated += estMins
       }
 
       // Mandatory derivation: Module estimated duration ALWAYS equals sum of activity estimated durations
@@ -431,6 +443,8 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
             activity_type: act.activity_type,
             title: act.title.trim(),
             sequence_order: act.sequence_order,
+            estimated_minutes: act.estimated_minutes,
+            day_number: act.day_number,
             is_completed: false,
           })
         })
@@ -438,12 +452,50 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
     })
 
     if (activityInserts.length > 0) {
-      const { error: insertActivitiesError } = await supabase
+      let { error: insertActivitiesError } = await supabase
         .from("module_activities")
         .insert(activityInserts)
 
+      // Fallback mode if remote Supabase schema missing optional estimated_minutes / day_number columns
       if (insertActivitiesError) {
-        console.error("[generate-plan] Insert activities error:", insertActivitiesError)
+        console.error(
+          "[generate-plan] Primary insert activities error:",
+          insertActivitiesError.message,
+          "Code:",
+          insertActivitiesError.code,
+          "Details:",
+          insertActivitiesError.details,
+          "Hint:",
+          insertActivitiesError.hint
+        )
+
+        const isColumnError =
+          insertActivitiesError.code === "PGRST204" ||
+          insertActivitiesError.code === "42703" ||
+          (insertActivitiesError.message &&
+            (insertActivitiesError.message.includes("column") ||
+              insertActivitiesError.message.includes("estimated_minutes") ||
+              insertActivitiesError.message.includes("day_number")))
+
+        if (isColumnError) {
+          console.warn(
+            "[generate-plan] Schema column missing on remote Supabase instance. Retrying activity insert with core columns..."
+          )
+          const coreActivityInserts = activityInserts.map(({ estimated_minutes, day_number, ...rest }) => rest)
+          const { error: fallbackError } = await supabase
+            .from("module_activities")
+            .insert(coreActivityInserts)
+
+          insertActivitiesError = fallbackError
+        }
+      }
+
+      if (insertActivitiesError) {
+        console.error(
+          "[generate-plan] Final activity insert failed:",
+          insertActivitiesError.message,
+          insertActivitiesError.details
+        )
         // Cleanup broken new plan & modules
         await supabase.from("learning_plans").delete().eq("id", newPlan.id)
         // Rollback previous plan status
@@ -455,7 +507,10 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
             .eq("user_id", user.id)
         }
         return NextResponse.json(
-          { error: "Failed to persist module activities in database." },
+          {
+            error: `Failed to persist module activities in database: ${insertActivitiesError.message}`,
+            details: insertActivitiesError.details || null,
+          },
           { status: 500 }
         )
       }

@@ -58,7 +58,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey", active: true },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
   { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "#" },
+  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "#" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "#" },
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
@@ -105,8 +105,8 @@ function DailyJourneyContent() {
     return "Good evening"
   }
 
-  // Helper to select today's session activity IDs starting from first incomplete activity
-  const selectSessionBatch = (curr: ActiveCurriculum, dailyBudget: number): string[] => {
+  // Helper to select today's assigned activities based on the current active day
+  const selectSessionBatch = (curr: ActiveCurriculum, _dailyBudget: number): string[] => {
     const allActs: FlattenedActivity[] = []
     if (curr && curr.modules) {
       curr.modules.forEach((mod) => {
@@ -123,24 +123,15 @@ function DailyJourneyContent() {
       })
     }
 
-    const incomplete = allActs.filter((a) => !a.is_completed)
-    const selected: string[] = []
-    let accumulated = 0
+    if (allActs.length === 0) return []
 
-    for (const act of incomplete) {
-      const actMins = typeof act.estimated_minutes === "number" && act.estimated_minutes > 0 ? act.estimated_minutes : 20
-      if (selected.length === 0) {
-        selected.push(act.id)
-        accumulated += actMins
-      } else if (accumulated + actMins <= dailyBudget) {
-        selected.push(act.id)
-        accumulated += actMins
-      } else {
-        break
-      }
-    }
+    // 1. Identify current active day from the first incomplete activity in sequence order
+    const firstIncomplete = allActs.find((a) => !a.is_completed)
+    const activeDay = firstIncomplete ? (firstIncomplete.day_number || 1) : 1
 
-    return selected
+    // 2. Select ALL activities assigned to activeDay (stable for the entire day)
+    const todaysTasks = allActs.filter((a) => (a.day_number || 1) === activeDay)
+    return todaysTasks.map((a) => a.id)
   }
 
   // Load real profile and active curriculum foundation
@@ -291,39 +282,20 @@ function DailyJourneyContent() {
   // 2. Identify incomplete activities across full curriculum
   const incompleteActivities = allActivities.filter((a) => !a.is_completed)
 
-  // 3. Build today's active session batch using sessionActivityIds
-  const todaysBatch: FlattenedActivity[] = []
-  if (sessionActivityIds && sessionActivityIds.length > 0) {
-    sessionActivityIds.forEach((id) => {
-      const act = allActivities.find((a) => a.id === id)
-      if (act) todaysBatch.push(act)
-    })
-  }
+  // 3. Determine current active day from the first incomplete activity
+  const firstIncomplete = allActivities.find((a) => !a.is_completed)
+  const activeDay = firstIncomplete ? (firstIncomplete.day_number || 1) : 1
 
-  // Fallback if sessionActivityIds not set yet
-  if (todaysBatch.length === 0 && incompleteActivities.length > 0) {
-    let accumulatedMins = 0
-    for (const act of incompleteActivities) {
-      const actMins = typeof act.estimated_minutes === "number" && act.estimated_minutes > 0 ? act.estimated_minutes : 20
-      if (todaysBatch.length === 0) {
-        todaysBatch.push(act)
-        accumulatedMins += actMins
-      } else if (accumulatedMins + actMins <= dailyBudget) {
-        todaysBatch.push(act)
-        accumulatedMins += actMins
-      } else {
-        break
-      }
-    }
-  }
+  // 4. Build today's active session batch (all activities for activeDay)
+  const todaysBatch: FlattenedActivity[] = allActivities.filter((a) => (a.day_number || 1) === activeDay)
 
   const todaysCompletedCount = todaysBatch.filter((a) => a.is_completed).length
   const todaysTotalMins = todaysBatch.reduce((sum, a) => sum + (a.estimated_minutes || 20), 0)
   const isTodayComplete = todaysBatch.length > 0 && todaysCompletedCount === todaysBatch.length
 
-  // Determine current learning topic
+  // Determine current learning topic & day sequence
   const currentTopic = todaysBatch[0]?.module_title || "Curriculum Focus"
-  const daySequence = todaysBatch[0]?.module_sequence || 1
+  const daySequence = activeDay
 
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300">

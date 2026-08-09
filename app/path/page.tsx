@@ -87,7 +87,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path", active: true },
   { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "#" },
+  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
   { id: "notes", label: "Notes", icon: FileText, href: "#" },
@@ -678,6 +678,11 @@ function LearningPathContent() {
                                     </Link>
                                   )}
 
+                                  {act.day_number && (
+                                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-mono text-primary">
+                                      Day {act.day_number} • {act.estimated_minutes || 20}m
+                                    </span>
+                                  )}
                                   <span className="rounded-full border border-border/40 bg-muted/20 px-2 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">
                                     {ACTIVITY_TYPE_LABELS[act.activity_type] || act.activity_type}
                                   </span>

@@ -144,6 +144,8 @@ export interface Database {
           activity_type: ActivityType
           title: string
           sequence_order: number
+          estimated_minutes: number | null
+          day_number: number | null
           is_completed: boolean
           completed_at: string | null
           created_at: string
@@ -155,6 +157,8 @@ export interface Database {
           activity_type: ActivityType
           title: string
           sequence_order: number
+          estimated_minutes?: number | null
+          day_number?: number | null
           is_completed?: boolean
           completed_at?: string | null
           created_at?: string
@@ -166,6 +170,8 @@ export interface Database {
           activity_type?: ActivityType
           title?: string
           sequence_order?: number
+          estimated_minutes?: number | null
+          day_number?: number | null
           is_completed?: boolean
           completed_at?: string | null
           created_at?: string
