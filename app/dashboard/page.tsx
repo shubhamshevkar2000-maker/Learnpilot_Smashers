@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   ArrowRight,
   Sparkles,
+  Calendar,
 } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { ProtectedRoute } from "@/components/auth/protected-route"
@@ -45,8 +46,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard", active: true },
+  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "#" },
+  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "#" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "#" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "#" },
@@ -469,21 +471,28 @@ function DashboardContent() {
 
         {/* RIGHT COLUMN: Compact Contextual Learning Intelligence */}
         <aside className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-border/40 px-5 py-5 space-y-5 bg-background/40">
-          {/* Section: Today */}
-          <div className="space-y-1">
+          {/* Section: Today's Journey */}
+          <div className="space-y-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
-              Today
+              Today's Journey
             </span>
-            <p className="text-xs text-muted-foreground">
-              {curriculum?.modules[0]
-                ? `Module 01 — ${curriculum.modules[0].title}`
-                : "No learning activity yet."}
+            <p className="text-xs font-medium text-foreground flex items-center justify-between">
+              <span>{profile?.available_daily_minutes || 45} min daily budget</span>
             </p>
             <p className="text-[11px] leading-relaxed text-muted-foreground/80">
               {curriculum?.modules[0]
-                ? curriculum.modules[0].description
-                : "Your personalized curriculum will appear here once your learning trajectory is generated."}
+                ? `Next focus: ${curriculum.modules[0].title}`
+                : "Your personalized daily learning session based on your path."}
             </p>
+            <div className="pt-1">
+              <Link
+                href="/journey"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+              >
+                <span>Continue Journey</span>
+                <ArrowRight size={12} />
+              </Link>
+            </div>
           </div>
 
           <hr className="border-t border-border/40" />

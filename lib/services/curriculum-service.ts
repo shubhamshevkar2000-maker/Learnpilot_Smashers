@@ -1,10 +1,160 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database, LearningPlan, LearningModule, LearnerProfile } from "@/types/database.types"
+import type { Database, LearningPlan, LearningModule, LearnerProfile, ModuleActivity } from "@/types/database.types"
 import { generateLearningPlan } from "@/lib/generator/plan-generator"
+
+export interface ModuleWithActivities extends LearningModule {
+  activities?: ModuleActivity[]
+}
 
 export interface ActiveCurriculum {
   plan: LearningPlan
-  modules: LearningModule[]
+  modules: ModuleWithActivities[]
+}
+
+/**
+ * Read-only query for the authenticated user's active learning plan, modules, and activities.
+ * Performs NO auto-generation or database mutation.
+ */
+export async function getActiveCurriculumFoundation(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<ActiveCurriculum | null> {
+  if (!userId) return null
+
+  // 1. Fetch active plan for authenticated user
+  const { data: existingPlan, error: planFetchError } = await supabase
+    .from("learning_plans")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle()
+
+  if (planFetchError) {
+    console.error("Error fetching learning plan:", planFetchError)
+    throw new Error("Unable to load learning plan at this time.")
+  }
+
+  if (!existingPlan) {
+    return {
+      plan: null as any,
+      modules: [],
+    }
+  }
+
+  // 2. Fetch learning modules for this plan
+  const { data: modules, error: modulesFetchError } = await supabase
+    .from("learning_modules")
+    .select("*")
+    .eq("plan_id", existingPlan.id)
+    .eq("user_id", userId)
+    .order("sequence_order", { ascending: true })
+
+  if (modulesFetchError) {
+    console.error("Error fetching learning modules:", modulesFetchError)
+    throw new Error("Unable to load learning modules.")
+  }
+
+  const moduleList = (modules as LearningModule[]) || []
+  if (moduleList.length === 0) {
+    return {
+      plan: existingPlan as LearningPlan,
+      modules: [],
+    }
+  }
+
+  // 3. Fetch module activities for these modules
+  const moduleIds = moduleList.map((m) => m.id)
+  const { data: activities, error: activitiesFetchError } = await supabase
+    .from("module_activities")
+    .select("*")
+    .in("module_id", moduleIds)
+    .eq("user_id", userId)
+    .order("sequence_order", { ascending: true })
+
+  if (activitiesFetchError) {
+    console.error("Error fetching module activities:", activitiesFetchError)
+  }
+
+  const activityMap = new Map<string, ModuleActivity[]>()
+  if (activities) {
+    for (const act of activities as ModuleActivity[]) {
+      const list = activityMap.get(act.module_id) || []
+      list.push(act)
+      activityMap.set(act.module_id, list)
+    }
+  }
+
+  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => ({
+    ...mod,
+    activities: activityMap.get(mod.id) || [],
+  }))
+
+  return {
+    plan: existingPlan as LearningPlan,
+    modules: modulesWithActivities,
+  }
+}
+
+/**
+ * Persists an activity's completion status to Supabase and updates parent module status accordingly.
+ */
+export async function completeActivity(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  activityId: string,
+  moduleId: string
+): Promise<boolean> {
+  if (!userId || !activityId || !moduleId) return false
+
+  // 1. Mark ONLY the specific activity as completed
+  const { error: actError } = await supabase
+    .from("module_activities")
+    .update({
+      is_completed: true,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("id", activityId)
+    .eq("user_id", userId)
+
+  if (actError) {
+    console.error("Error completing activity:", actError)
+    return false
+  }
+
+  // 2. Fetch all sibling activities for parent module
+  const { data: siblingActivities, error: sibError } = await supabase
+    .from("module_activities")
+    .select("id, is_completed")
+    .eq("module_id", moduleId)
+    .eq("user_id", userId)
+
+  if (!sibError && siblingActivities && siblingActivities.length > 0) {
+    const completedCount = siblingActivities.filter((a) => a.is_completed || a.id === activityId).length
+    const totalCount = siblingActivities.length
+
+    if (completedCount === totalCount) {
+      await supabase
+        .from("learning_modules")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", moduleId)
+        .eq("user_id", userId)
+    } else {
+      await supabase
+        .from("learning_modules")
+        .update({
+          status: "in_progress",
+          started_at: new Date().toISOString(),
+        })
+        .eq("id", moduleId)
+        .eq("user_id", userId)
+        .eq("status", "not_started")
+    }
+  }
+
+  return true
 }
 
 /**
