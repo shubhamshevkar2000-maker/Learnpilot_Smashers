@@ -42,12 +42,12 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "#" },
+  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments", active: true },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
+  { id: "notes", label: "Notes", icon: FileText, href: "#" },
+  { id: "settings", label: "Settings", icon: Settings, href: "#" },
 ]
 
 export default function AssessmentsPage() {

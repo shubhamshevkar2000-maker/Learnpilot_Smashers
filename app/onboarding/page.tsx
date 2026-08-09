@@ -289,6 +289,17 @@ function OnboardingFlow() {
         console.error("Supabase upsert error:", error)
         setErrorMessage(error.message || "Failed to save profile. Please try again.")
       } else {
+        // Automatically trigger plan regeneration based on new profile
+        try {
+          await fetch("/api/generate-plan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ regenerate: true })
+          })
+        } catch (planErr) {
+          console.error("Failed to automatically regenerate plan:", planErr)
+        }
+
         setIsCompletedState(true)
         setSuccessMessage("Your learner profile has been saved successfully.")
       }

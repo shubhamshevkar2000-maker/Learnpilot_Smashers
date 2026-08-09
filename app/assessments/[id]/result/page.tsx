@@ -157,40 +157,133 @@ function AssessmentResultContent({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {Object.keys(skillBreakdown).length > 0 && (
-          <div className="rounded-xl border border-border/40 bg-card p-6 shadow-sm space-y-5">
-            <div className="flex items-center gap-2 text-foreground">
-              <BarChart2 size={16} />
-              <h3 className="text-sm font-semibold">Skill Breakdown</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-border/40 bg-card p-6 shadow-sm space-y-5">
+              <div className="flex items-center gap-2 text-foreground">
+                <BarChart2 size={16} />
+                <h3 className="text-sm font-semibold">Skill Breakdown</h3>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(skillBreakdown).map(([topic, perc]) => (
+                  <div key={topic} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-medium text-muted-foreground">{topic}</span>
+                      <span className="font-semibold text-foreground">{perc as number}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-muted overflow-hidden rounded-full">
+                      <div 
+                        className={`h-full transition-all duration-300 ease-out ${(perc as number) >= 70 ? 'bg-primary' : 'bg-destructive'}`} 
+                        style={{ width: `${perc}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-4">
-              {Object.entries(skillBreakdown).map(([topic, perc]) => (
-                <div key={topic} className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-medium text-muted-foreground">{topic}</span>
-                    <span className="font-semibold text-foreground">{perc as number}%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-muted overflow-hidden rounded-full">
-                    <div 
-                      className={`h-full transition-all duration-300 ease-out ${(perc as number) >= 70 ? 'bg-primary' : 'bg-destructive'}`} 
-                      style={{ width: `${perc}%` }}
-                    />
-                  </div>
+
+            {metadata?.typeBreakdown && Object.keys(metadata.typeBreakdown).length > 0 && (
+              <div className="rounded-xl border border-border/40 bg-card p-6 shadow-sm space-y-5">
+                <div className="flex items-center gap-2 text-foreground">
+                  <BarChart2 size={16} />
+                  <h3 className="text-sm font-semibold">Question Format Performance</h3>
                 </div>
-              ))}
-            </div>
+                <div className="space-y-4">
+                  {Object.entries(metadata.typeBreakdown).map(([type, perc]) => (
+                    <div key={type} className="space-y-1.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-medium text-muted-foreground capitalize">{type.replace('_', ' ')}</span>
+                        <span className="font-semibold text-foreground">{perc as number}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-muted overflow-hidden rounded-full">
+                        <div 
+                          className={`h-full transition-all duration-300 ease-out ${(perc as number) >= 70 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                          style={{ width: `${perc}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {metadata?.self_review_count > 0 && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 shadow-sm space-y-2">
+            <h3 className="text-sm font-semibold text-amber-600">Self-Review Items</h3>
+            <p className="text-xs text-foreground/80">
+              You completed {metadata.self_review_count} subjective self-review question(s). These do not impact your objective pass/fail score, but completing them is crucial for deep comprehension.
+            </p>
           </div>
         )}
 
         <div className="rounded-xl border border-border/40 bg-muted/30 p-6 space-y-4">
           <div className="flex items-center gap-2 text-foreground mb-1">
             <TrendingUp size={16} />
-            <h3 className="text-sm font-semibold">Performance Summary</h3>
+            <h3 className="text-sm font-semibold">Performance Summary & Recommendations</h3>
           </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            {passed 
-              ? `Great job! You demonstrated a solid understanding of this module's concepts. Your results have been securely saved and will inform your future learning path.`
-              : `You've identified some knowledge gaps in this module. Review the foundational concepts and try again when you're ready.`}
-          </p>
+          <div className="text-xs leading-relaxed text-muted-foreground space-y-3">
+            <p>
+              {passed 
+                ? `Great job! You demonstrated a solid understanding of this module's concepts. Your results have been securely saved and will inform your future learning path.`
+                : `You've identified some knowledge gaps in this module. Review the foundational concepts and try again when you're ready.`}
+            </p>
+            
+            {/* Intelligent Recommendation Logic */}
+            {(() => {
+              const weakSkills = Object.entries(skillBreakdown).filter(([_, score]) => (score as number) < 70).map(([topic]) => topic);
+              const weakTypes = metadata?.typeBreakdown ? Object.entries(metadata.typeBreakdown).filter(([_, score]) => (score as number) < 70).map(([type]) => type) : [];
+              
+              if (weakSkills.length === 0 && weakTypes.length === 0) {
+                return (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg font-medium">
+                    🎯 Recommendation: You showed mastery across all assessed areas. You are ready to proceed to the next module in your Learning Path.
+                  </div>
+                )
+              }
+
+              return (
+                <div className="p-4 bg-background border border-border/60 rounded-xl space-y-3">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <ArrowRight size={14} className="text-primary" />
+                    Recommended Next Steps
+                  </h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {weakSkills.length > 0 && (
+                      <li>
+                        Review the conceptual guides for: <strong className="text-foreground">{weakSkills.join(', ')}</strong>.
+                      </li>
+                    )}
+                    {weakTypes.includes('debugging') && (
+                      <li>
+                        You struggled with debugging. Try stepping through the code examples in the module again to understand the execution flow.
+                      </li>
+                    )}
+                    {weakTypes.includes('code_output') && (
+                      <li>
+                        Your mental model for code execution could use some practice. Try running the examples locally and changing variables to see the output.
+                      </li>
+                    )}
+                    {weakTypes.includes('scenario') && (
+                      <li>
+                        Scenario questions test architectural decision making. Review the trade-offs mentioned in the module's concepts.
+                      </li>
+                    )}
+                    {weakTypes.includes('code_write') && (
+                      <li>
+                        You struggled with writing code from scratch. Practice implementing the concepts practically in your editor without relying on hints.
+                      </li>
+                    )}
+                    {weakSkills.length > 0 && (
+                      <li>
+                        Revisit the <strong className="text-foreground">{assessmentTitle}</strong> Course and re-read the "Explanation & Core Concept" sections.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )
+            })()}
+          </div>
         </div>
 
         <div className="pt-4 flex justify-center">

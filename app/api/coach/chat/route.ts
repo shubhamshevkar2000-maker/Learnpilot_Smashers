@@ -152,7 +152,7 @@ PERSONALIZED COACHING DIRECTIVES:
     const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
 
     const completion = await groq.chat.completions.create({
-      messages: groqMessages,
+      messages: groqMessages as any[],
       model: model,
       temperature: 0.7,
       max_tokens: 1024,

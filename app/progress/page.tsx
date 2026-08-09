@@ -40,12 +40,12 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "#" },
+  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress", active: true },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
+  { id: "notes", label: "Notes", icon: FileText, href: "#" },
+  { id: "settings", label: "Settings", icon: Settings, href: "#" },
 ]
 
 export default function ProgressPage() {
@@ -139,8 +139,9 @@ function ProgressContent() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <div>
           <div className="flex items-center justify-between pb-5">
@@ -165,10 +166,11 @@ function ProgressContent() {
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${item.active
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
+                    item.active
                       ? "font-medium text-primary bg-primary/5"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                    }`}
+                  }`}
                 >
                   <Icon size={14} className={item.active ? "text-primary" : "text-muted-foreground"} />
                   <span>{item.label}</span>
@@ -203,7 +205,7 @@ function ProgressContent() {
 
       <main className="flex-1 px-4 py-4 sm:px-6 md:px-10 xl:px-12 overflow-y-auto">
         <div className="max-w-[1000px] space-y-8 pb-12">
-
+          
           <div className="flex items-center justify-between pb-2 border-b border-border/40 lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -227,7 +229,7 @@ function ProgressContent() {
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
+            
             {/* OVERALL PROGRESS */}
             <div className="md:col-span-2 rounded-2xl border border-border/40 bg-card p-6 shadow-sm flex flex-col justify-between">
               <div>
@@ -241,8 +243,8 @@ function ProgressContent() {
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-muted overflow-hidden rounded-full mt-4">
-                  <div
-                    className="h-full bg-primary transition-all duration-1000 ease-out"
+                  <div 
+                    className="h-full bg-primary transition-all duration-1000 ease-out" 
                     style={{ width: `${viewModel.overallProgress.percentage}%` }}
                   />
                 </div>
@@ -259,8 +261,8 @@ function ProgressContent() {
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Target size={12} />
-                      {viewModel.currentFocus.assessmentAttempts === 0
-                        ? "Assessment not attempted"
+                      {viewModel.currentFocus.assessmentAttempts === 0 
+                        ? "Assessment not attempted" 
                         : `Latest validation: ${viewModel.currentFocus.latestScore}%`}
                     </span>
                   </div>
@@ -280,7 +282,7 @@ function ProgressContent() {
             {/* TARGET TRAJECTORY */}
             <div className="md:col-span-1 rounded-2xl border border-border/40 bg-card p-6 shadow-sm flex flex-col">
               <h3 className="text-sm font-medium text-foreground mb-4">Target Trajectory</h3>
-
+              
               {viewModel.targetTrajectory.targetDate ? (
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
@@ -306,14 +308,14 @@ function ProgressContent() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
+            
             <div className="lg:col-span-2 space-y-8">
               {/* ASSESSMENT PERFORMANCE */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-foreground">Assessment Performance</h3>
                 </div>
-
+                
                 {viewModel.assessmentPerformance.totalAttempts === 0 ? (
                   <div className="rounded-xl border border-border/40 bg-card p-6 text-center shadow-sm">
                     <Award size={24} className="mx-auto mb-3 text-muted-foreground opacity-30" />
@@ -342,7 +344,7 @@ function ProgressContent() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-foreground">Skill Mastery</h3>
                 </div>
-
+                
                 {viewModel.skillMastery.length === 0 ? (
                   <div className="rounded-xl border border-border/40 bg-card p-6 text-center shadow-sm">
                     <BarChart3 size={24} className="mx-auto mb-3 text-muted-foreground opacity-30" />
@@ -365,8 +367,8 @@ function ProgressContent() {
                           </div>
                         </div>
                         <div className="h-1 w-full bg-muted overflow-hidden rounded-full">
-                          <div
-                            className={`h-full transition-all duration-500 ease-out ${skill.latestScore >= 75 ? 'bg-primary' : 'bg-muted-foreground'}`}
+                          <div 
+                            className={`h-full transition-all duration-500 ease-out ${skill.latestScore >= 75 ? 'bg-primary' : 'bg-muted-foreground'}`} 
                             style={{ width: `${skill.latestScore}%` }}
                           />
                         </div>
@@ -381,7 +383,7 @@ function ProgressContent() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-foreground">Learning Trajectory</h3>
                 </div>
-
+                
                 {viewModel.modules.length === 0 ? (
                   <div className="rounded-xl border border-border/40 bg-card p-6 text-center shadow-sm">
                     <Compass size={24} className="mx-auto mb-3 text-muted-foreground opacity-30" />
@@ -392,14 +394,15 @@ function ProgressContent() {
                     {viewModel.modules.map((mod, idx) => {
                       const isCompleted = mod.status === 'completed'
                       const isCurrent = mod.id === viewModel.currentFocus.module?.id
-
+                      
                       return (
                         <div key={mod.id} className="flex gap-4">
                           <div className="flex flex-col items-center">
-                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-medium transition-colors ${isCompleted ? 'border-primary bg-primary text-primary-foreground' :
-                                isCurrent ? 'border-primary text-primary bg-primary/5' :
-                                  'border-border/60 text-muted-foreground bg-muted/30'
-                              }`}>
+                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-medium transition-colors ${
+                              isCompleted ? 'border-primary bg-primary text-primary-foreground' : 
+                              isCurrent ? 'border-primary text-primary bg-primary/5' : 
+                              'border-border/60 text-muted-foreground bg-muted/30'
+                            }`}>
                               {isCompleted ? <CheckCircle size={10} /> : idx + 1}
                             </div>
                             {idx < viewModel.modules.length - 1 && (
@@ -423,15 +426,15 @@ function ProgressContent() {
             </div>
 
             <div className="lg:col-span-1 space-y-8">
-
+              
               {/* AREAS TO IMPROVE */}
               <section className="space-y-4">
                 <h3 className="text-sm font-medium text-foreground">Areas to Improve</h3>
-
+                
                 {viewModel.areasToImprove.length === 0 ? (
                   <div className="rounded-xl border border-border/40 bg-card p-5 text-center shadow-sm">
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      {viewModel.assessmentPerformance.totalAttempts === 0
+                      {viewModel.assessmentPerformance.totalAttempts === 0 
                         ? "Complete more assessments to identify areas that need attention."
                         : "You're demonstrating solid proficiency across all tested skills. Keep it up!"}
                     </p>
@@ -458,7 +461,7 @@ function ProgressContent() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-foreground">Recent Activity</h3>
                 </div>
-
+                
                 {viewModel.recentActivity.length === 0 ? (
                   <div className="rounded-xl border border-border/40 bg-card p-5 text-center shadow-sm">
                     <Activity size={20} className="mx-auto mb-2 text-muted-foreground opacity-30" />
@@ -473,7 +476,7 @@ function ProgressContent() {
                       const Icon = isAssessment ? CheckCircle : BookOpen
                       const date = new Date(event.timestamp)
                       const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-
+                      
                       return (
                         <div key={event.id} className="rounded-xl border border-border/40 bg-card p-4 shadow-sm flex gap-3 items-start">
                           <div className={`mt-0.5 p-1.5 rounded-md ${isAssessment ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
@@ -497,7 +500,7 @@ function ProgressContent() {
                   </div>
                 )}
               </section>
-
+              
             </div>
           </div>
         </div>

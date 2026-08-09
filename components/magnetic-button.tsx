@@ -9,9 +9,11 @@ type Props = {
   className?: string
   variant?: "solid" | "ghost"
   onClick?: () => void
+  type?: "button" | "submit" | "reset"
+  disabled?: boolean
 }
 
-export function MagneticButton({ children, className, variant = "solid", onClick }: Props) {
+export function MagneticButton({ children, className, variant = "solid", onClick, type = "button", disabled = false }: Props) {
   const ref = useRef<HTMLButtonElement>(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
@@ -19,6 +21,7 @@ export function MagneticButton({ children, className, variant = "solid", onClick
   const sy = useSpring(y, { stiffness: 200, damping: 15, mass: 0.4 })
 
   const handleMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled) return
     const rect = ref.current?.getBoundingClientRect()
     if (!rect) return
     const relX = e.clientX - rect.left - rect.width / 2
@@ -35,12 +38,14 @@ export function MagneticButton({ children, className, variant = "solid", onClick
   return (
     <motion.button
       ref={ref}
+      type={type}
+      disabled={disabled}
       onMouseMove={handleMove}
       onMouseLeave={reset}
       onClick={onClick}
       style={{ x: sx, y: sy }}
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={disabled ? {} : { scale: 1.04 }}
+      whileTap={disabled ? {} : { scale: 0.97 }}
       className={cn(
         "group relative inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium tracking-wide transition-colors",
         variant === "solid"

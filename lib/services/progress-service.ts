@@ -139,6 +139,7 @@ export async function getProgressViewModel(
   // Skill Mastery & Trend Calculation
   // We will process attempts chronologically to track the history of each skill
   const skillHistory: Record<string, number[]> = {}
+  const typeHistory: Record<string, number[]> = {}
   
   assessments.forEach(attempt => {
     const meta = attempt.metadata as Record<string, any> | undefined
@@ -149,6 +150,16 @@ export async function getProgressViewModel(
           skillHistory[skill] = []
         }
         skillHistory[skill].push(score)
+      })
+    }
+
+    const tBreakdown = meta?.typeBreakdown as Record<string, number> | undefined
+    if (tBreakdown) {
+      Object.entries(tBreakdown).forEach(([type, score]) => {
+        if (!typeHistory[type]) {
+          typeHistory[type] = []
+        }
+        typeHistory[type].push(score)
       })
     }
   })
@@ -167,8 +178,22 @@ export async function getProgressViewModel(
     }
   }).sort((a, b) => b.latestScore - a.latestScore) // Highest to lowest
 
+  const typeMastery: SkillMastery[] = Object.entries(typeHistory).map(([topic, scores]) => {
+    const latest = scores[scores.length - 1]
+    let trend: number | null = null
+    if (scores.length > 1) {
+      const previous = scores[scores.length - 2]
+      trend = latest - previous
+    }
+    return {
+      topic,
+      latestScore: latest,
+      trend
+    }
+  }).sort((a, b) => b.latestScore - a.latestScore) // Highest to lowest
+
   // Areas to Improve (Weakest skills, threshold < 75 or just bottom N)
-  const areasToImprove = [...skillMastery]
+  const areasToImprove = [...skillMastery, ...typeMastery]
     .filter(s => s.latestScore < 80) // A configurable threshold to consider it an "area to improve"
     .sort((a, b) => a.latestScore - b.latestScore) // Lowest to highest
     .slice(0, 3)

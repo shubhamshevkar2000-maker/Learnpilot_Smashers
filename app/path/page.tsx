@@ -646,7 +646,7 @@ function LearningPathContent() {
                           </div>
 
                           <div className="space-y-1.5">
-                            {mod.activities.map((act) => (
+                            {mod.activities?.map((act) => (
                               <div
                                 key={act.id}
                                 className="flex items-center justify-between rounded-lg border border-border/30 bg-card/30 px-3 py-2 text-xs"

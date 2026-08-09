@@ -1,4 +1,4 @@
-import type { AssessmentQuestion, QuestionDifficulty } from "@/types/assessment"
+import type { AssessmentQuestion } from "@/types/assessment"
 
 // A deterministic question bank that the assessment generator pulls from.
 // It maps domains/keywords to sets of questions, tiered by difficulty.
@@ -22,6 +22,20 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       topic: "HTML5 Semantics",
       difficulty: "beginner",
       questionType: "mcq"
+    },
+    {
+      question: "Which of the following are valid HTML5 semantic tags? (Select all that apply)",
+      options: [
+        { id: "a", text: "<header>" },
+        { id: "b", text: "<nav>" },
+        { id: "c", text: "<bold>" },
+        { id: "d", text: "<aside>" },
+      ],
+      multiple_correct_ids: ["a", "b", "d"],
+      explanation: "<header>, <nav>, and <aside> are valid semantic tags. <bold> is not a valid HTML5 tag (use <b> or <strong>).",
+      topic: "HTML5 Semantics",
+      difficulty: "beginner",
+      questionType: "multiple_select"
     }
   ],
   "css": [
@@ -65,7 +79,22 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       explanation: "Container queries allow a component to style itself based on the size of its parent container, making it highly modular and reusable.",
       topic: "Responsive Design",
       difficulty: "advanced",
-      questionType: "mcq"
+      questionType: "scenario"
+    },
+    {
+      question: "Why is the flex item overflowing its container?",
+      codeSnippet: ".container {\n  display: flex;\n  width: 300px;\n}\n.item {\n  flex-shrink: 0;\n  width: 400px;\n}",
+      options: [
+        { id: "a", text: "Because display: flex forces items to wrap." },
+        { id: "b", text: "Because flex-shrink is 0, preventing the item from shrinking below its specified width of 400px." },
+        { id: "c", text: "Because width should be max-width." },
+        { id: "d", text: "Because the container needs overflow: hidden." },
+      ],
+      correct_answer_id: "b",
+      explanation: "Setting flex-shrink to 0 tells the browser not to shrink the element even if it overflows the flex container.",
+      topic: "CSS Layout",
+      difficulty: "intermediate",
+      questionType: "debugging"
     }
   ],
 
@@ -88,18 +117,19 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       questionType: "mcq"
     },
     {
-      question: "You have an async function that fetches user data. What happens if you forget to use the 'await' keyword before the fetch call?",
+      question: "What will this code output?",
+      codeSnippet: "console.log(1);\nsetTimeout(() => console.log(2), 0);\nPromise.resolve().then(() => console.log(3));\nconsole.log(4);",
       options: [
-        { id: "a", text: "The variable receives the resolved data immediately." },
-        { id: "b", text: "A syntax error is thrown." },
-        { id: "c", text: "The variable receives a Promise object instead of the actual data." },
-        { id: "d", text: "The function execution blocks until the fetch completes." },
+        { id: "a", text: "1, 2, 3, 4" },
+        { id: "b", text: "1, 4, 3, 2" },
+        { id: "c", text: "1, 4, 2, 3" },
+        { id: "d", text: "1, 3, 4, 2" }
       ],
-      correct_answer_id: "c",
-      explanation: "Without 'await', fetch returns a Promise representing the eventual completion of the request, not the actual response data.",
-      topic: "JS Async/Await",
-      difficulty: "beginner",
-      questionType: "mcq"
+      correct_answer_id: "b",
+      explanation: "1 and 4 are synchronous. 3 is a microtask (Promise) so it runs before the macrotask (setTimeout) which logs 2.",
+      topic: "JS Event Loop",
+      difficulty: "advanced",
+      questionType: "code_output"
     },
     {
       question: "A production dashboard has three independent API requests that currently execute sequentially using await. Which approach would improve latency while preserving independent error handling?",
@@ -113,7 +143,47 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       explanation: "Promise.allSettled runs them concurrently and waits for all to finish (success or failure), preserving independent error handling, whereas Promise.all would reject immediately if one fails.",
       topic: "JS Concurrency",
       difficulty: "advanced",
-      questionType: "mcq"
+      questionType: "scenario"
+    },
+    {
+      question: "In JavaScript, 'let' and 'const' variables are hoisted but reside in the Temporal Dead Zone until their declaration is evaluated.",
+      options: [
+        { id: "true", text: "True" },
+        { id: "false", text: "False" }
+      ],
+      correct_answer_id: "true",
+      explanation: "let and const are indeed hoisted, but accessing them before initialization throws a ReferenceError because they are in the TDZ.",
+      topic: "JS Fundamentals",
+      difficulty: "beginner",
+      questionType: "true_false"
+    },
+    {
+      question: "Explain the difference between let, const, and var.",
+      selfReviewCriteria: [
+        "Mentioned block scope for let and const.",
+        "Mentioned function scope for var.",
+        "Mentioned that const cannot be reassigned.",
+        "Mentioned hoisting differences (TDZ for let/const)."
+      ],
+      topic: "JS Fundamentals",
+      difficulty: "beginner",
+      questionType: "short_answer"
+    },
+    {
+      question: "Write a function that calculates the total sum of an array of numbers. If the array is empty, return 0.",
+      language: "javascript",
+      starterCode: "function calculateTotal(numbers) {\n  // your code here\n}",
+      testCases: [
+        { input: "[1, 2, 3]", expected: "6" },
+        { input: "[10, 5]", expected: "15" },
+        { input: "[]", expected: "0" }
+      ],
+      expectedBehavior: "The function should iterate over the array (using reduce or a loop) and return the total sum of its elements.",
+      hints: ["Consider using the Array.prototype.reduce() method.", "Make sure to handle the empty array case."],
+      explanation: "Using reduce: numbers.reduce((sum, n) => sum + n, 0) is a clean way to sum an array in JavaScript.",
+      topic: "JS Fundamentals",
+      difficulty: "beginner",
+      questionType: "code_write"
     }
   ],
 
@@ -136,6 +206,21 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       questionType: "mcq"
     },
     {
+      question: "Why is the counter updating to 1 instead of 3?",
+      codeSnippet: "const [count, setCount] = useState(0);\nconst incrementThree = () => {\n  setCount(count + 1);\n  setCount(count + 1);\n  setCount(count + 1);\n};",
+      options: [
+        { id: "a", text: "Because React only allows one state update per function call." },
+        { id: "b", text: "Because the updates are batched and 'count' is stale in the closure. Use setCount(prev => prev + 1)." },
+        { id: "c", text: "Because useState is asynchronous and fails." },
+        { id: "d", text: "Because the component hasn't mounted yet." },
+      ],
+      correct_answer_id: "b",
+      explanation: "React batches state updates. Since `count` is captured in the closure as 0, all three calls effectively do `setCount(0 + 1)`. Using the functional updater `prev => prev + 1` resolves this.",
+      topic: "React State",
+      difficulty: "intermediate",
+      questionType: "debugging"
+    },
+    {
       question: "What is the primary benefit of React Server Components (RSC) in Next.js?",
       options: [
         { id: "a", text: "They completely replace client-side state management." },
@@ -148,6 +233,84 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       topic: "React Server Components",
       difficulty: "advanced",
       questionType: "mcq"
+    },
+    {
+      question: "Which hooks will trigger a component re-render when their value changes? (Select all that apply)",
+      options: [
+        { id: "a", text: "useState" },
+        { id: "b", text: "useRef" },
+        { id: "c", text: "useReducer" },
+        { id: "d", text: "useEffect" },
+      ],
+      multiple_correct_ids: ["a", "c"],
+      explanation: "useState and useReducer trigger re-renders. useRef mutations do not. useEffect is a side-effect hook, not a state holder.",
+      topic: "React Hooks",
+      difficulty: "intermediate",
+      questionType: "multiple_select"
+    },
+    {
+      question: "Write a React hook `useToggle` that returns a boolean state and a toggle function.",
+      language: "javascript",
+      starterCode: "import { useState } from 'react';\n\nexport function useToggle(initialValue = false) {\n  // your code here\n}",
+      testCases: [
+        { input: "const [, t] = useToggle(false); t(); const [v] = useToggle(false); return String(v);", expected: "true" },
+        { input: "const [v] = useToggle(true); return String(v);", expected: "true" }
+      ],
+      expectedBehavior: "The hook should return an array where the first element is the state value and the second is a function that toggles it.",
+      hints: ["Use the useState hook.", "The toggle function should ideally use the previous state updater pattern: setState(prev => !prev)."],
+      explanation: "A custom hook `useToggle` simplifies boolean state management.",
+      topic: "React Hooks",
+      difficulty: "intermediate",
+      questionType: "code_write"
+    }
+  ],
+
+  // ---------------------------------------------------------
+  // AI / LLM
+  // ---------------------------------------------------------
+  "ai": [
+    {
+      question: "In a Retrieval-Augmented Generation (RAG) system, what is the primary purpose of the vector database?",
+      options: [
+        { id: "a", text: "To format the final AI response." },
+        { id: "b", text: "To store embedded chunks of text and perform fast similarity search against a user's query." },
+        { id: "c", text: "To train the LLM on new data overnight." },
+        { id: "d", text: "To handle user authentication." }
+      ],
+      correct_answer_id: "b",
+      explanation: "Vector databases store text embeddings and use cosine similarity to retrieve relevant context rapidly during a RAG pipeline.",
+      topic: "RAG Architecture",
+      difficulty: "advanced",
+      questionType: "mcq"
+    },
+    {
+      question: "You are building an AI chatbot. It keeps forgetting the user's name from two messages ago. What is the standard architectural fix?",
+      options: [
+        { id: "a", text: "Switch to a larger LLM model like GPT-4." },
+        { id: "b", text: "Append the recent conversation history to the prompt payload on every new request." },
+        { id: "c", text: "Decrease the model's temperature parameter." },
+        { id: "d", text: "Fine-tune the model with the user's name." }
+      ],
+      correct_answer_id: "b",
+      explanation: "LLM APIs are stateless. The standard approach is to maintain conversation history (context window) and append it to each new request.",
+      topic: "AI Agents",
+      difficulty: "intermediate",
+      questionType: "scenario"
+    },
+    {
+      question: "Write a function to compute cosine similarity between two 1D arrays of equal length representing embeddings.",
+      language: "javascript",
+      starterCode: "function cosineSimilarity(a, b) {\n  // your code here\n}",
+      testCases: [
+        { input: "[1, 0, 0], [1, 0, 0]", expected: "1" },
+        { input: "[1, 0, 0], [0, 1, 0]", expected: "0" }
+      ],
+      expectedBehavior: "Calculate the dot product of the vectors divided by the product of their magnitudes.",
+      hints: ["Dot product is the sum of a[i] * b[i].", "Magnitude is the square root of the sum of squared elements."],
+      explanation: "Cosine similarity measures the angle between two vectors and is fundamental to vector search.",
+      topic: "RAG Architecture",
+      difficulty: "advanced",
+      questionType: "code_write"
     }
   ],
   
@@ -168,6 +331,18 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
       topic: "Application & Trade-offs",
       difficulty: "beginner",
       questionType: "mcq"
+    },
+    {
+      question: "Unit tests are meant to test the entire application stack end-to-end, including the database.",
+      options: [
+        { id: "true", text: "True" },
+        { id: "false", text: "False" }
+      ],
+      correct_answer_id: "false",
+      explanation: "Unit tests focus on isolated functions or components. End-to-end (E2E) tests cover the entire stack including the database.",
+      topic: "Testing",
+      difficulty: "beginner",
+      questionType: "true_false"
     }
   ]
 }

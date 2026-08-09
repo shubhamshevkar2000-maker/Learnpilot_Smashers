@@ -1,0 +1,74 @@
+app/api/coach/chat/route.ts(142,7): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(body: ChatCompletionCreateParamsNonStreaming, options?: RequestOptions | undefined): APIPromise<ChatCompletion>', gave the following error.
+    Type '{ role: string; content: string; }[]' is not assignable to type 'ChatCompletionMessageParam[]'.
+      Type '{ role: string; content: string; }' is not assignable to type 'ChatCompletionMessageParam'.
+        Property 'name' is missing in type '{ role: string; content: string; }' but required in type 'ChatCompletionFunctionMessageParam'.
+  Overload 2 of 3, '(body: ChatCompletionCreateParamsStreaming, options?: RequestOptions | undefined): APIPromise<Stream<ChatCompletionChunk>>', gave the following error.
+    Type '{ role: string; content: string; }[]' is not assignable to type 'ChatCompletionMessageParam[]'.
+      Type '{ role: string; content: string; }' is not assignable to type 'ChatCompletionMessageParam'.
+        Property 'name' is missing in type '{ role: string; content: string; }' but required in type 'ChatCompletionFunctionMessageParam'.
+  Overload 3 of 3, '(body: ChatCompletionCreateParamsBase, options?: RequestOptions | undefined): APIPromise<ChatCompletion | Stream<...>>', gave the following error.
+    Type '{ role: string; content: string; }[]' is not assignable to type 'ChatCompletionMessageParam[]'.
+      Type '{ role: string; content: string; }' is not assignable to type 'ChatCompletionMessageParam'.
+        Property 'name' is missing in type '{ role: string; content: string; }' but required in type 'ChatCompletionFunctionMessageParam'.
+app/api/generate-plan/route.ts(105,46): error TS2339: Property 'onboarding_completed' does not exist on type 'never'.
+app/api/generate-plan/route.ts(184,25): error TS2339: Property 'learning_goal' does not exist on type 'never'.
+app/api/generate-plan/route.ts(185,28): error TS2339: Property 'desired_outcome' does not exist on type 'never'.
+app/api/generate-plan/route.ts(186,26): error TS2339: Property 'current_level' does not exist on type 'never'.
+app/api/generate-plan/route.ts(187,61): error TS2339: Property 'available_daily_minutes' does not exist on type 'never'.
+app/api/generate-plan/route.ts(188,38): error TS2339: Property 'target_date' does not exist on type 'never'.
+app/api/generate-plan/route.ts(342,17): error TS2345: Argument of type '{ status: string; }' is not assignable to parameter of type 'never'.
+app/api/generate-plan/route.ts(343,32): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(359,9): error TS2353: Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+app/api/generate-plan/route.ts(366,33): error TS2339: Property 'learning_goal' does not exist on type 'never'.
+app/api/generate-plan/route.ts(378,19): error TS2345: Argument of type '{ status: string; }' is not assignable to parameter of type 'never'.
+app/api/generate-plan/route.ts(379,34): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(390,24): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(402,15): error TS2345: Argument of type '{ plan_id: any; user_id: string; title: string; description: string | null; rationale: string | null; sequence_order: number; estimated_minutes: number | undefined; status: "not_started"; }[]' is not assignable to parameter of type 'never[]'.
+  Type '{ plan_id: any; user_id: string; title: string; description: string | null; rationale: string | null; sequence_order: number; estimated_minutes: number | undefined; status: "not_started"; }' is not assignable to type 'never'.
+app/api/generate-plan/route.ts(409,71): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(414,19): error TS2345: Argument of type '{ status: string; }' is not assignable to parameter of type 'never'.
+app/api/generate-plan/route.ts(415,34): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(427,75): error TS2339: Property 'sequence_order' does not exist on type 'never'.
+app/api/generate-plan/route.ts(431,28): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(446,17): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'never[]'.
+  Type 'any' is not assignable to type 'never'.
+app/api/generate-plan/route.ts(451,73): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(456,21): error TS2345: Argument of type '{ status: string; }' is not assignable to parameter of type 'never'.
+app/api/generate-plan/route.ts(457,36): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(469,24): error TS2339: Property 'id' does not exist on type 'never'.
+app/api/generate-plan/route.ts(470,45): error TS2339: Property 'id' does not exist on type 'never'.
+app/forgot-password/page.tsx(126,15): error TS2322: Type '{ children: Element; type: string; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & Props'.
+app/login/page.tsx(193,15): error TS2322: Type '{ children: Element; type: string; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & Props'.
+app/onboarding/page.tsx(1005,15): error TS2322: Type '{ children: Element; onClick: () => Promise<void>; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'disabled' does not exist on type 'IntrinsicAttributes & Props'.
+app/path/page.tsx(649,30): error TS18048: 'mod.activities' is possibly 'undefined'.
+app/signup/page.tsx(208,15): error TS2322: Type '{ children: Element; type: string; disabled: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & Props'.
+lib/experience-store.ts(30,13): error TS2345: Argument of type '() => () => boolean' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => boolean' is not assignable to type 'void | Destructor'.
+    Type '() => boolean' is not assignable to type 'Destructor'.
+      Type 'boolean' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+lib/experience-store.ts(45,13): error TS2345: Argument of type '() => () => boolean' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => boolean' is not assignable to type 'void | Destructor'.
+    Type '() => boolean' is not assignable to type 'Destructor'.
+      Type 'boolean' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+lib/services/courses-service.ts(110,13): error TS2345: Argument of type '{ is_completed: boolean; completed_at: string; }' is not assignable to parameter of type 'never'.
+lib/services/courses-service.ts(132,64): error TS2339: Property 'is_completed' does not exist on type 'never'.
+lib/services/courses-service.ts(132,82): error TS2339: Property 'id' does not exist on type 'never'.
+lib/services/courses-service.ts(136,19): error TS2345: Argument of type '{ status: string; completed_at: string; }' is not assignable to parameter of type 'never'.
+lib/services/courses-service.ts(145,19): error TS2345: Argument of type '{ status: string; started_at: string; }' is not assignable to parameter of type 'never'.
+lib/services/curriculum-service.ts(48,33): error TS2339: Property 'id' does not exist on type 'never'.
+lib/services/curriculum-service.ts(112,13): error TS2345: Argument of type '{ is_completed: boolean; completed_at: string; }' is not assignable to parameter of type 'never'.
+lib/services/curriculum-service.ts(132,62): error TS2339: Property 'is_completed' does not exist on type 'never'.
+lib/services/curriculum-service.ts(132,80): error TS2339: Property 'id' does not exist on type 'never'.
+lib/services/curriculum-service.ts(138,17): error TS2345: Argument of type '{ status: string; completed_at: string; }' is not assignable to parameter of type 'never'.
+lib/services/curriculum-service.ts(147,17): error TS2345: Argument of type '{ status: string; started_at: string; }' is not assignable to parameter of type 'never'.
+lib/services/curriculum-service.ts(189,35): error TS2339: Property 'id' does not exist on type 'never'.
+lib/services/curriculum-service.ts(217,16): error TS2339: Property 'onboarding_completed' does not exist on type 'never'.
+lib/services/curriculum-service.ts(234,7): error TS2353: Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/services/curriculum-service.ts(250,22): error TS2339: Property 'id' does not exist on type 'never'.
+lib/services/curriculum-service.ts(262,13): error TS2345: Argument of type '{ plan_id: any; user_id: string; title: string; description: string; rationale: string; sequence_order: number; estimated_minutes: number; status: "not_started"; }[]' is not assignable to parameter of type 'never[]'.
+  Type '{ plan_id: any; user_id: string; title: string; description: string; rationale: string; sequence_order: number; estimated_minutes: number; status: "not_started"; }' is not assignable to type 'never'.

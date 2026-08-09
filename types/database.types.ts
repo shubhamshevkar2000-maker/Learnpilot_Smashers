@@ -56,6 +56,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       learning_plans: {
         Row: {
@@ -88,6 +89,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       learning_modules: {
         Row: {
@@ -98,7 +100,7 @@ export interface Database {
           description: string | null
           rationale: string | null
           sequence_order: number
-          estimated_minutes: number | null
+          estimated_minutes?: number | null
           status: ModuleStatus
           started_at: string | null
           completed_at: string | null
@@ -135,6 +137,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       module_activities: {
         Row: {
@@ -144,11 +147,12 @@ export interface Database {
           activity_type: ActivityType
           title: string
           sequence_order: number
-          estimated_minutes: number | null
-          day_number: number | null
           is_completed: boolean
           completed_at: string | null
           created_at: string
+          content_id: string | null
+                  estimated_minutes?: number | null
+          day_number?: number | null
         }
         Insert: {
           id?: string
@@ -157,11 +161,12 @@ export interface Database {
           activity_type: ActivityType
           title: string
           sequence_order: number
-          estimated_minutes?: number | null
-          day_number?: number | null
           is_completed?: boolean
           completed_at?: string | null
           created_at?: string
+          content_id?: string | null
+                  estimated_minutes?: number | null
+          day_number?: number | null
         }
         Update: {
           id?: string
@@ -170,12 +175,14 @@ export interface Database {
           activity_type?: ActivityType
           title?: string
           sequence_order?: number
-          estimated_minutes?: number | null
-          day_number?: number | null
           is_completed?: boolean
           completed_at?: string | null
           created_at?: string
+          content_id?: string | null
+                  estimated_minutes?: number | null
+          day_number?: number | null
         }
+        Relationships: []
       }
       assessment_results: {
         Row: {
@@ -214,6 +221,7 @@ export interface Database {
           metadata?: Json
           attempted_at?: string
         }
+        Relationships: []
       }
       agent_insights: {
         Row: {
@@ -249,48 +257,61 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       learner_notes: {
         Row: {
           id: string
           user_id: string
-          title: string
-          content: string
-          tags: string[]
-          source_type: string
-          source_id: string | null
-          source_title: string | null
-          is_pinned: boolean
+          module_id: string | null
+          activity_id: string | null
+          topic: string
+          note_content: string
+          difficulty_reflection: string | null
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          title?: string
-          content?: string
-          tags?: string[]
-          source_type?: string
-          source_id?: string | null
-          source_title?: string | null
-          is_pinned?: boolean
+          module_id?: string | null
+          activity_id?: string | null
+          topic: string
+          note_content: string
+          difficulty_reflection?: string | null
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          title?: string
-          content?: string
-          tags?: string[]
-          source_type?: string
-          source_id?: string | null
-          source_title?: string | null
-          is_pinned?: boolean
+          module_id?: string | null
+          activity_id?: string | null
+          topic?: string
+          note_content?: string
+          difficulty_reflection?: string | null
           created_at?: string
-          updated_at?: string
         }
+        Relationships: []
       }
+    }
+    Views: {
+      [key: string]: never
+    }
+    Functions: {
+      [key: string]: never
+    }
+    Enums: {
+      [key: string]: never
+    }
+    CompositeTypes: {
+      [key: string]: never
     }
   }
 }
+
+export type LearnerProfile = Database["public"]["Tables"]["learner_profiles"]["Row"]
+export type LearningPlan = Database["public"]["Tables"]["learning_plans"]["Row"]
+export type LearningModule = Database["public"]["Tables"]["learning_modules"]["Row"]
+export type ModuleActivity = Database["public"]["Tables"]["module_activities"]["Row"]
+export type AssessmentResult = Database["public"]["Tables"]["assessment_results"]["Row"]
+export type AgentInsight = Database["public"]["Tables"]["agent_insights"]["Row"]
+export type LearnerNote = Database["public"]["Tables"]["learner_notes"]["Row"]

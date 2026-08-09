@@ -10,7 +10,9 @@ export interface AIActivityOutput {
   title: string
   activity_type: ActivityType
   sequence_order: number
-  estimated_minutes: number
+  estimated_minutes?: number
+  day_number?: number
+  content_id?: string
 }
 
 export interface AIModuleOutput {
@@ -19,6 +21,7 @@ export interface AIModuleOutput {
   rationale: string
   sequence_order: number
   estimated_minutes?: number
+  day_number?: number
   activities: AIActivityOutput[]
 }
 
@@ -144,7 +147,8 @@ export async function POST(req: NextRequest) {
           "title": "Granular Activity Title",
           "activity_type": "concept" | "exercise" | "project" | "reflection",
           "sequence_order": 1,
-          "estimated_minutes": 20
+          "estimated_minutes": 20,
+          "content_id": "optional-content-id-string"
         }
       ]
     }
@@ -403,7 +407,7 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
       description: m.description ? m.description.trim() : null,
       rationale: m.rationale ? m.rationale.trim() : null,
       sequence_order: m.sequence_order,
-      estimated_minutes: m.estimated_minutes,
+      estimated_minutes: m.estimated_minutes || 0,
       status: "not_started" as const,
     }))
 
@@ -446,6 +450,7 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
             estimated_minutes: act.estimated_minutes,
             day_number: act.day_number,
             is_completed: false,
+            content_id: act.content_id || null,
           })
         })
       }

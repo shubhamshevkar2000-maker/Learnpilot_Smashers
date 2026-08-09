@@ -6,9 +6,83 @@ export interface ModuleWithActivities extends LearningModule {
   activities?: ModuleActivity[]
 }
 
+export interface ScheduledActivity extends ModuleActivity {
+  module_title: string
+  estimated_minutes?: number | null | null
+}
+
+export interface ScheduledDay {
+  dayNumber: number
+  totalMinutes: number
+  activities: ScheduledActivity[]
+}
+
+export interface ScheduledPath {
+  days: ScheduledDay[]
+  totalMinutes: number
+  targetDays: number
+  dailyCommitment: number
+  isOverloaded: boolean
+}
+
 export interface ActiveCurriculum {
   plan: LearningPlan
   modules: ModuleWithActivities[]
+}
+
+export function generateSchedule(
+  profile: LearnerProfile,
+  modules: ModuleWithActivities[]
+): ScheduledPath {
+  const dailyCommitment = profile.available_daily_minutes ? Math.max(profile.available_daily_minutes, 15) : 30
+  
+  let targetDays = 0
+  if (profile.target_date) {
+    const target = new Date(profile.target_date)
+    const now = new Date()
+    targetDays = Math.max(1, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+  }
+
+  const allActivities: ScheduledActivity[] = []
+  modules.forEach(m => {
+    (m.activities || []).forEach(a => {
+      allActivities.push({
+        ...a,
+        module_title: m.title
+      })
+    })
+  })
+
+  const days: ScheduledDay[] = []
+  let currentDay: ScheduledDay = { dayNumber: 1, totalMinutes: 0, activities: [] }
+  let totalMinutes = 0
+
+  allActivities.forEach(act => {
+    const est = act.estimated_minutes || 20
+    totalMinutes += est
+
+    if (currentDay.totalMinutes + est > dailyCommitment && currentDay.activities.length > 0) {
+      days.push(currentDay)
+      currentDay = { dayNumber: days.length + 1, totalMinutes: 0, activities: [] }
+    }
+
+    currentDay.activities.push(act)
+    currentDay.totalMinutes += est
+  })
+
+  if (currentDay.activities.length > 0) {
+    days.push(currentDay)
+  }
+
+  const isOverloaded = targetDays > 0 && days.length > targetDays
+
+  return {
+    days,
+    totalMinutes,
+    targetDays: targetDays > 0 ? targetDays : days.length,
+    dailyCommitment,
+    isOverloaded
+  }
 }
 
 /**
@@ -75,56 +149,19 @@ export async function getActiveCurriculumFoundation(
     console.error("Error fetching module activities:", activitiesFetchError)
   }
 
-  // 4. Fetch learner profile daily budget for backward-compatible fallback calculation
-  const { data: prof } = await supabase
-    .from("learner_profiles")
-    .select("available_daily_minutes")
-    .eq("user_id", userId)
-    .maybeSingle()
-
-  const dailyBudget = prof?.available_daily_minutes ? Math.max(prof.available_daily_minutes, 15) : 30
-  let currentDay = 1
-  let currentAccumulated = 0
-
   const activityMap = new Map<string, ModuleActivity[]>()
   if (activities) {
-    for (const rawAct of activities as ModuleActivity[]) {
-      const estMins =
-        typeof rawAct.estimated_minutes === "number" && rawAct.estimated_minutes > 0
-          ? rawAct.estimated_minutes
-          : 20
-
-      let assignedDay = rawAct.day_number
-      if (typeof assignedDay !== "number" || assignedDay <= 0) {
-        if (currentAccumulated > 0 && currentAccumulated + estMins > dailyBudget) {
-          currentDay += 1
-          currentAccumulated = 0
-        }
-        assignedDay = currentDay
-        currentAccumulated += estMins
-      }
-
-      const processedAct: ModuleActivity = {
-        ...rawAct,
-        estimated_minutes: estMins,
-        day_number: assignedDay,
-      }
-
-      const list = activityMap.get(processedAct.module_id) || []
-      list.push(processedAct)
-      activityMap.set(processedAct.module_id, list)
+    for (const act of activities as ModuleActivity[]) {
+      const list = activityMap.get(act.module_id) || []
+      list.push(act)
+      activityMap.set(act.module_id, list)
     }
   }
 
-  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => {
-    const acts = activityMap.get(mod.id) || []
-    const sumMins = acts.reduce((acc, a) => acc + (a.estimated_minutes || 20), 0)
-    return {
-      ...mod,
-      estimated_minutes: sumMins > 0 ? sumMins : mod.estimated_minutes,
-      activities: acts,
-    }
-  })
+  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => ({
+    ...mod,
+    activities: activityMap.get(mod.id) || [],
+  }))
 
   return {
     plan: existingPlan as LearningPlan,

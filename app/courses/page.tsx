@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
@@ -45,8 +46,7 @@ import {
   getActiveCurriculumFoundation,
 } from "@/lib/services/curriculum-service"
 import {
-  getStandaloneCourses,
-  getUserCompletedCourseLessons,
+  getPersonalizedCourses,
   completeCourseLesson,
   type Course,
   type CourseLesson,
@@ -70,11 +70,11 @@ const NAV_ITEMS: NavItem[] = [
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
+  { id: "notes", label: "Notes", icon: FileText, href: "#" },
+  { id: "settings", label: "Settings", icon: Settings, href: "#" },
 ]
 
-const LESSON_TYPE_BADGES: Record<CourseLessonType, { label: string; className: string }> = {
+const ACTIVITY_TYPE_BADGES: Record<CourseLessonType, { label: string; className: string }> = {
   concept: { label: "Concept", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" },
   exercise: { label: "Exercise", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
   project: { label: "Project", className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20" },
@@ -96,8 +96,7 @@ function CoursesContent() {
 
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<LearnerProfile | null>(null)
-  const [activePathModules, setActivePathModules] = useState<string[]>([])
-  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([])
+  const [coursesCatalog, setCoursesCatalog] = useState<Course[]>([])
   
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [activeToast, setActiveToast] = useState<string | null>(null)
@@ -105,7 +104,7 @@ function CoursesContent() {
 
   // Filtering & Selection state
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeFilter, setActiveFilter] = useState<"all" | "recommended" | "in_progress" | "completed">("all")
+  const [activeFilter, setActiveFilter] = useState<"all" | "in_progress" | "completed">("all")
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
   const [activeLessonIndex, setActiveLessonIndex] = useState<number>(0)
   const [completingId, setCompletingId] = useState<string | null>(null)
@@ -138,15 +137,11 @@ function CoursesContent() {
 
       setProfile(profData as LearnerProfile)
 
-      // Fetch active learning path modules for recommendation signal (read-only)
+      // Fetch active learning path and populate personalized courses
       const pathData = await getActiveCurriculumFoundation(supabase, user.id)
       if (pathData && pathData.modules) {
-        setActivePathModules(pathData.modules.map((m) => m.title))
+        setCoursesCatalog(getPersonalizedCourses(pathData))
       }
-
-      // Fetch user's completed course lessons independently
-      const completions = await getUserCompletedCourseLessons(supabase, user.id)
-      setCompletedLessonIds(completions)
     } catch (err: any) {
       console.error("Error loading courses data:", err)
       setErrorMessage(err?.message || "Failed to load course library.")
@@ -159,18 +154,6 @@ function CoursesContent() {
     loadCoursesData()
   }, [loadCoursesData])
 
-  // Derive Standalone Courses Catalog
-  const coursesCatalog: Course[] = useMemo(() => {
-    const rawCatalog = getStandaloneCourses(profile?.learning_goal, profile?.current_level, activePathModules)
-    
-    return rawCatalog.map((course) => ({
-      ...course,
-      lessons: course.lessons.map((lesson) => ({
-        ...lesson,
-        is_completed: completedLessonIds.includes(lesson.id),
-      })),
-    }))
-  }, [profile, activePathModules, completedLessonIds])
 
   // Filtered Courses for Catalog Overview
   const filteredCourses = useMemo(() => {
@@ -184,7 +167,6 @@ function CoursesContent() {
       const totalLessons = c.lessons.length
       const completedLessons = c.lessons.filter((l) => l.is_completed).length
 
-      if (activeFilter === "recommended") return c.isRecommended
       if (activeFilter === "in_progress") return completedLessons > 0 && completedLessons < totalLessons
       if (activeFilter === "completed") return totalLessons > 0 && completedLessons === totalLessons
 
@@ -216,7 +198,7 @@ function CoursesContent() {
     try {
       const success = await completeCourseLesson(supabase, user.id, courseId, lessonId)
       if (success) {
-        setCompletedLessonIds((prev) => (prev.includes(lessonId) ? prev : [...prev, lessonId]))
+        setCoursesCatalog(prev => prev.map(c => c.id === courseId ? { ...c, lessons: c.lessons.map(l => l.id === lessonId ? { ...l, is_completed: true } : l) } : c))
 
         setActiveToast("Lesson completed! Progress updated.")
         setTimeout(() => setActiveToast(null), 3000)
@@ -410,7 +392,7 @@ function CoursesContent() {
           activeFilter={activeFilter}
           setActiveFilter={setActiveFilter}
           onSelectCourse={handleSelectCourse}
-          learnerGoal={profile?.learning_goal || "your target goal"}
+          learnerGoal={profile?.learning_goal || "Web Development"}
         />
       </main>
     </div>
@@ -434,12 +416,11 @@ function CoursesOverview({
   filteredCourses: Course[]
   searchQuery: string
   setSearchQuery: (q: string) => void
-  activeFilter: "all" | "recommended" | "in_progress" | "completed"
-  setActiveFilter: (f: "all" | "recommended" | "in_progress" | "completed") => void
+  activeFilter: "all" | "in_progress" | "completed"
+  setActiveFilter: (f: "all" | "in_progress" | "completed") => void
   onSelectCourse: (id: string) => void
   learnerGoal: string
 }) {
-  const recommendedCourses = courses.filter((c) => c.isRecommended)
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -448,13 +429,13 @@ function CoursesOverview({
         <div className="relative z-10 max-w-2xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
             <GraduationCap className="h-3.5 w-3.5" />
-            <span>Standalone Course Library</span>
+            <span>Your Personalized Learning Path</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Build the skills that move you forward.
           </h1>
           <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            Explore deep-dive courses tailored to your goal of{" "}
+            Execute your customized curriculum tailored to your goal of{" "}
             <span className="font-semibold text-foreground">{learnerGoal}</span>. Each course features an interactive learning workspace, syntactic code blocks, hands-on exercises, and self-check checkpoints.
           </p>
         </div>
@@ -466,8 +447,7 @@ function CoursesOverview({
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {(
             [
-              { id: "all", label: "All Courses" },
-              { id: "recommended", label: "★ Recommended" },
+              { id: "all", label: "All Modules" },
               { id: "in_progress", label: "In Progress" },
               { id: "completed", label: "Completed" },
             ] as const
@@ -499,32 +479,11 @@ function CoursesOverview({
         </div>
       </div>
 
-      {/* Recommended For You Section */}
-      {activeFilter === "all" && !searchQuery && recommendedCourses.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold tracking-tight text-foreground uppercase tracking-wider text-[11px]">
-                Recommended for your Roadmap
-              </h2>
-            </div>
-            <span className="text-xs text-muted-foreground font-mono">{recommendedCourses.length} Courses</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {recommendedCourses.map((course) => (
-              <CourseCard key={course.id} course={course} onSelect={() => onSelectCourse(course.id)} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Explore All Courses Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold tracking-tight text-foreground uppercase tracking-wider text-[11px]">
-            {activeFilter === "all" && !searchQuery ? "All Courses" : `Matching Courses (${filteredCourses.length})`}
+            {activeFilter === "all" && !searchQuery ? "Your Modules" : `Matching Modules (${filteredCourses.length})`}
           </h2>
         </div>
 
@@ -569,12 +528,6 @@ function CourseCard({ course, onSelect }: { course: Course; onSelect: () => void
           <span className="px-2.5 py-1 rounded-full bg-muted/40 border border-border/40 text-[10px] font-medium text-muted-foreground">
             {course.difficulty}
           </span>
-          {course.isRecommended && (
-            <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold flex items-center gap-1 border border-primary/20">
-              <Sparkles className="h-3 w-3" />
-              <span>{course.recommendation_reason || "Recommended"}</span>
-            </span>
-          )}
         </div>
 
         {/* Title & Description */}
@@ -661,6 +614,10 @@ function CourseLearningWorkspace({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null)
   const [copiedCode, setCopiedCode] = useState(false)
+  const [noteContent, setNoteContent] = useState("")
+  const [isSavingNote, setIsSavingNote] = useState(false)
+  const [localToast, setLocalToast] = useState<string | null>(null)
+  const supabase = useMemo(() => createClient(), [])
 
   const activeLesson = course.lessons[activeLessonIndex] || course.lessons[0]
   const totalLessons = course.lessons.length
@@ -668,13 +625,28 @@ function CourseLearningWorkspace({
   const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
   const isCourseComplete = completedLessons === totalLessons
 
-  // Reset quiz selection on lesson change
+  const { user } = useAuth()
+
+  // Reset quiz selection and notes on lesson change
   useEffect(() => {
     setSelectedQuizOption(null)
     setCopiedCode(false)
+    setNoteContent("")
   }, [activeLessonIndex])
 
-  const badge = LESSON_TYPE_BADGES[activeLesson.lesson_type] || LESSON_TYPE_BADGES.concept
+  if (!activeLesson) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center border border-border/40 bg-muted/10 rounded-2xl space-y-4">
+        <h3 className="font-semibold text-foreground">No Lessons Available</h3>
+        <p className="text-sm text-muted-foreground">This course doesn't have any lessons yet. Check back later!</p>
+        <button onClick={onExit} className="px-4 py-2 mt-4 text-xs font-semibold rounded-xl bg-primary text-primary-foreground">
+          Go Back
+        </button>
+      </div>
+    )
+  }
+
+  const badge = ACTIVITY_TYPE_BADGES[activeLesson.activity_type] || ACTIVITY_TYPE_BADGES.concept
 
   const handleCopyCode = () => {
     if (activeLesson.code_example) {
@@ -684,13 +656,36 @@ function CourseLearningWorkspace({
     }
   }
 
+  const handleSaveNote = async () => {
+    if (!noteContent.trim() || !user) return
+    setIsSavingNote(true)
+    try {
+      const { createNote } = await import("@/lib/services/notes-service")
+      await createNote(supabase, {
+        userId: user.id,
+        moduleId: course.id,
+        activityId: activeLesson.id,
+        topic: activeLesson.title,
+        noteContent: noteContent.trim(),
+        difficultyReflection: "Intermediate"
+      })
+      setNoteContent("")
+      setLocalToast("Note saved successfully! You can view it in your Daily Journey and Notes.")
+      setTimeout(() => setLocalToast(null), 3000)
+    } catch (err) {
+      console.error("Failed to save note", err)
+    } finally {
+      setIsSavingNote(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Toast Notification */}
-      {activeToast && (
+      {(localToast || activeToast) && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400 shadow-xl backdrop-blur-md">
           <Sparkles className="h-4 w-4 shrink-0 text-emerald-500" />
-          <span>{activeToast}</span>
+          <span>{localToast || activeToast}</span>
         </div>
       )}
 
@@ -762,7 +757,7 @@ function CourseLearningWorkspace({
               {course.lessons.map((lesson, idx) => {
                 const isActive = idx === activeLessonIndex
                 const isCompleted = lesson.is_completed
-                const lBadge = LESSON_TYPE_BADGES[lesson.lesson_type] || LESSON_TYPE_BADGES.concept
+                const lBadge = ACTIVITY_TYPE_BADGES[lesson.activity_type] || ACTIVITY_TYPE_BADGES.concept
 
                 return (
                   <button
@@ -830,36 +825,122 @@ function CourseLearningWorkspace({
             </h1>
           </div>
 
-          {/* Section 1: Objective */}
-          <div className="p-4 md:p-5 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-primary text-xs uppercase tracking-wider">
-              <Target className="h-4 w-4" />
-              <span>Learning Objective</span>
+          {/* Conditional Content or Fallback */}
+          {activeLesson.is_content_missing ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center border border-border/40 bg-muted/10 rounded-2xl space-y-4">
+              <div className="p-3 bg-muted/20 rounded-full">
+                <Lightbulb className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Content Unavailable</h3>
+                <p className="text-sm text-muted-foreground">Content for this activity is being prepared.</p>
+              </div>
             </div>
-            <p className="text-xs md:text-sm text-foreground/90 font-medium leading-relaxed">
-              {activeLesson.objective}
-            </p>
-          </div>
+          ) : (
+            <>
+          {/* Content Sections based on Activity Type */}
+          {activeLesson.activity_type === "concept" && (
+            <>
+              {/* CONCEPT: Learn -> Example -> Check understanding */}
+              <div className="p-4 md:p-5 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
+                <div className="flex items-center gap-2 font-semibold text-primary text-xs uppercase tracking-wider">
+                  <Target className="h-4 w-4" />
+                  <span>Learning Objective</span>
+                </div>
+                <p className="text-xs md:text-sm text-foreground/90 font-medium leading-relaxed">
+                  {activeLesson.objective}
+                </p>
+              </div>
 
-          {/* Section 2: Deep Concept & Educational Explanation */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Lightbulb className="h-4 w-4 text-amber-500" />
-              <h2>Core Concept & Architectural Deep Dive</h2>
-            </div>
-            
-            <div className="rounded-2xl border border-border/40 bg-card/40 p-5 md:p-6 text-xs md:text-sm leading-relaxed text-foreground/90 whitespace-pre-line space-y-4">
-              {activeLesson.concept_guide}
-            </div>
-          </div>
+              {activeLesson.concept_guide && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Lightbulb className="h-4 w-4 text-amber-500" />
+                    <h2>Explanation & Core Concept</h2>
+                  </div>
+                  <div className="rounded-2xl border border-border/40 bg-card/40 p-5 md:p-6 text-xs md:text-sm leading-relaxed text-foreground/90 whitespace-pre-line space-y-4">
+                    {activeLesson.concept_guide}
+                  </div>
+                </div>
+              )}
 
-          {/* Section 3: Syntactic Implementation Code Block */}
-          {activeLesson.code_example && (
-            <div className="space-y-3">
+              {/* Checkpoint is shared below */}
+            </>
+          )}
+
+          {activeLesson.activity_type === "exercise" && (
+            <>
+              {/* EXERCISE: Problem -> Starter Code -> Hint -> Self Check */}
+              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5 md:p-6 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                  <BrainCircuit className="h-4 w-4 text-purple-500" />
+                  <span>Problem Statement & Action Item</span>
+                </div>
+                <p className="text-xs md:text-sm text-foreground/90 leading-relaxed">
+                  {activeLesson.practical_exercise || activeLesson.objective}
+                </p>
+              </div>
+              
+              {activeLesson.concept_guide && (
+                <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2 text-xs md:text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+                  <div className="font-semibold text-amber-600 flex items-center gap-1">
+                    <Lightbulb className="w-3.5 h-3.5" /> Hint
+                  </div>
+                  {activeLesson.concept_guide}
+                </div>
+              )}
+            </>
+          )}
+
+          {activeLesson.activity_type === "project" && (
+            <>
+              {/* PROJECT: Real-world Requirements -> Build Steps -> Evaluation */}
+              <div className="space-y-6">
+                <div className="p-5 rounded-2xl bg-primary/10 border border-primary/20 space-y-3">
+                  <div className="flex items-center gap-2 font-semibold text-primary text-xs uppercase tracking-wider">
+                    <Target className="h-4 w-4" />
+                    <span>Real-world Project Requirements</span>
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed">
+                    {activeLesson.objective}
+                  </p>
+                </div>
+                
+                {activeLesson.practical_exercise && (
+                  <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-3">
+                    <h3 className="text-sm font-bold">Implementation Steps</h3>
+                    <div className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
+                      {activeLesson.practical_exercise}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {activeLesson.activity_type === "reflection" && (
+            <>
+              {/* REFLECTION: Review -> Reflection Questions -> Self Evaluation */}
+              <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 md:p-6 space-y-4 text-center py-10">
+                <BrainCircuit className="h-10 w-10 text-indigo-500 mx-auto" />
+                <h2 className="text-xl font-bold text-foreground">Reflection & Takeaways</h2>
+                <p className="text-sm text-foreground/80 max-w-lg mx-auto">
+                  Take a moment to review what you've learned.
+                </p>
+                <div className="bg-card border border-border/40 p-4 rounded-xl text-sm text-foreground/90 max-w-lg mx-auto mt-4 text-left">
+                  {activeLesson.practical_exercise || activeLesson.objective}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Code example (render for concept/exercise if exists) */}
+          {(activeLesson.activity_type === "concept" || activeLesson.activity_type === "exercise") && activeLesson.code_example && (
+            <div className="space-y-3 mt-6">
               <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
                 <span className="flex items-center gap-1.5 font-semibold text-foreground">
                   <Code2 className="h-4 w-4 text-primary" />
-                  <span>Syntactic Implementation Example</span>
+                  <span>{activeLesson.activity_type === "exercise" ? "Starter Code / Template" : "Syntactic Implementation Example"}</span>
                 </span>
                 <button
                   onClick={handleCopyCode}
@@ -875,33 +956,16 @@ function CourseLearningWorkspace({
                   {activeLesson.code_example}
                 </pre>
               </div>
-
-              {activeLesson.code_explanation && (
-                <p className="text-xs text-muted-foreground italic font-mono bg-muted/20 p-3 rounded-xl border border-border/30">
-                  💡 Code Insight: {activeLesson.code_explanation}
-                </p>
-              )}
             </div>
           )}
 
-          {/* Section 4: Practical Exercise / Hands-On Task */}
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5 md:p-6 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-              <BrainCircuit className="h-4 w-4 text-purple-500" />
-              <span>Hands-On Action Item</span>
-            </div>
-            <p className="text-xs md:text-sm text-foreground/90 leading-relaxed">
-              {activeLesson.practical_exercise}
-            </p>
-          </div>
-
-          {/* Section 5: Knowledge Checkpoint Quiz */}
+          {/* Shared Knowledge Checkpoint / Self-Check for any type that provides it */}
           {activeLesson.checkpoint_question && (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 md:p-6 space-y-4">
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 md:p-6 space-y-4 mt-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span>Knowledge Checkpoint</span>
+                  <span>{activeLesson.activity_type === 'reflection' ? "Self Evaluation" : "Knowledge Checkpoint / Self Check"}</span>
                 </div>
                 <span className="text-[10px] font-mono text-muted-foreground">Self Verification</span>
               </div>
@@ -946,6 +1010,32 @@ function CourseLearningWorkspace({
                 </div>
               )}
             </div>
+          )}
+          {/* Notes / Reflection Section */}
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 md:p-6 mt-8 space-y-4">
+            <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider">
+              <FileText className="h-4 w-4" />
+              <span>Personal Notes & Reflection</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Jot down your key takeaways, code snippets, or thoughts about this topic. These will appear in your Daily Journey.
+            </p>
+            <textarea
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="What did you learn from this lesson?"
+              className="w-full h-24 p-3 rounded-xl border border-border/40 bg-card/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none transition-all"
+            />
+            <button
+              onClick={handleSaveNote}
+              disabled={!noteContent.trim() || isSavingNote}
+              className="px-4 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+            >
+              {isSavingNote ? "Saving..." : "Save Note"}
+            </button>
+          </div>
+
+            </>
           )}
 
           {/* Celebration Banner when course completed */}

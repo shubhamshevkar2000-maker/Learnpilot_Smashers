@@ -1,0 +1,462 @@
+{
+  "html-css-l1": {
+    "id": "html-css-l1",
+    "title": "HTML5 Document Structure & Syntax Rules",
+    "type": "concept",
+    "objective": "Master standard HTML5 document syntax, doctype declarations, head metadata, and tag nesting hierarchy.",
+    "concept_guide": "HTML (HyperText Markup Language) provides the fundamental structural blueprint of every webpage on the internet. Browsers parse HTML documents from top to bottom, constructing a Document Object Model (DOM) tree in memory.\n\nThe <!DOCTYPE html> declaration informs the browser engine that the document complies with the modern HTML5 specification, preventing browsers from triggering legacy \"quirks mode\".\n\nInside the root <html> element, the document is partitioned into two primary children:\n1. <head>: Contains non-visual metadata, document title, character encoding (<meta charset=\"UTF-8\">), viewport scaling rules, and linked external stylesheet assets.\n2. <body>: Encloses all renderable UI content including text, images, forms, and structural sections.\n\nStrict syntax rules dictate that all opening tags must be properly closed or self-closed, attributes must be enclosed in quotes, and elements must follow clean ancestor-descendant nesting without overlapping tags.",
+    "code_example": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>HTML5 Structural Blueprint</title>\n  <link rel=\"stylesheet\" href=\"styles.css\">\n</head>\n<body>\n  <header>\n    <h1>Modern Web Development</h1>\n    <p>Building accessible, performant interfaces</p>\n  </header>\n  <main>\n    <article>\n      <h2>Document Object Model Hierarchy</h2>\n      <p>HTML tags construct DOM nodes parsed sequentially by web browsers.</p>\n    </article>\n  </main>\n  <footer>\n    <p>&copy; 2026 LearnPilot Academy</p>\n  </footer>\n</body>\n</html>",
+    "practical_exercise": "Open your code editor and build an HTML5 file named `index.html`. Add a valid head section with viewport metadata, a title of 'My First Web Page', and a body containing a main element with an h1 heading and two paragraph elements.",
+    "checkpoint_question": "Why is the <!DOCTYPE html> declaration placed at the very first line of an HTML document?",
+    "checkpoint_options": [
+      "It forces the browser to download external JavaScript files faster.",
+      "It informs the browser to parse the page using standard HTML5 rendering rules instead of quirks mode.",
+      "It creates an encrypted secure connection to the web server.",
+      "It styles the page with default CSS framework reset rules."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "The doctype declaration tells the browser's rendering engine that the document follows the HTML5 specification, preventing legacy rendering quirks.",
+    "topic": "HTML & CSS Foundations",
+    "difficulty": "Beginner"
+  },
+  "html-css-l2": {
+    "id": "html-css-l2",
+    "title": "Semantic Elements & ARIA Accessibility",
+    "type": "exercise",
+    "objective": "Apply HTML5 semantic sectioning elements and ARIA accessibility roles to create machine-readable document landmarks.",
+    "concept_guide": "In early web development, layouts were constructed using generic <div> tags with custom class names like <div class=\"header\">. HTML5 introduced semantic elements (<header>, <nav>, <main>, <article>, <section>, <aside>, <footer>) that explicitly describe their content's purpose to browsers, search engines, and screen readers.\n\nSemantic markup produces clear document outlines and enhances web accessibility (a11y). Screen reader users rely on landmark navigation keys to jump directly between main content, navigation bars, and footers.\n\nWhen native HTML elements cannot fully express a custom widget's interactive state, WAI-ARIA (Accessible Rich Internet Applications) attributes bridge the gap using roles (role=\"dialog\"), states (aria-expanded=\"true\"), and accessible names (aria-label=\"Close modal window\").",
+    "code_example": "<header role=\"banner\" className=\"site-header\">\n  <nav aria-label=\"Primary Navigation\">\n    <ul>\n      <li><a href=\"#courses\">Courses</a></li>\n      <li><a href=\"#about\">About</a></li>\n    </ul>\n  </nav>\n</header>\n\n<main id=\"main-content\">\n  <section aria-labelledby=\"section-heading\">\n    <h2 id=\"section-heading\">Semantic Principles</h2>\n    <article className=\"card\">\n      <h3>Accessibility First</h3>\n      <p>Semantic tags allow assistive tools to navigate page landmarks seamlessly.</p>\n    </article>\n  </section>\n</main>",
+    "practical_exercise": "Refactor a webpage layout consisting entirely of <div> elements into semantic elements (<header>, <nav>, <main>, <article>, <footer>) and add an aria-label to the navigation bar.",
+    "checkpoint_question": "Which HTML element should be used to enclose self-contained, independently redistributable content like a blog post or news article?",
+    "checkpoint_options": [
+      "<section>",
+      "<div>",
+      "<article>",
+      "<aside>"
+    ],
+    "checkpoint_correct_index": 2,
+    "checkpoint_explanation": "The <article> element represents a self-contained composition intended to be independently reusable or redistributable.",
+    "topic": "HTML & CSS Foundations",
+    "difficulty": "Beginner"
+  },
+  "html-css-l3": {
+    "id": "html-css-l3",
+    "title": "CSS Selectors, Specificity & Box Model",
+    "type": "concept",
+    "objective": "Master CSS rule declaration syntax, selector specificity calculation, and element dimension box model physics.",
+    "concept_guide": "CSS (Cascading Style Sheets) controls the visual presentation, typography, and spatial geometry of HTML elements.\n\nThe CSS Box Model is the foundational layout physics engine. Every HTML element is modeled as a rectangular box comprising four concentric layers:\n1. Content Box: Where text, images, and child elements render.\n2. Padding: Transparent buffer space surrounding the content.\n3. Border: Visible line surrounding the padding.\n4. Margin: Transparent outer spacing separating the element from sibling boxes.\n\nBy default, CSS uses content-box sizing where width specifies only the content width, causing padding and borders to expand total element size. Applying `box-sizing: border-box` universally forces width and height to include padding and border inside specified dimensions.\n\nCSS Specificity determines which style rules apply when multiple selectors target the same element:\nInline Styles (1000) > IDs (100) > Classes/Attributes (10) > Elements/Types (1).",
+    "code_example": "/* Universal Box Sizing Reset */\n*, *::before, *::after {\n  box-sizing: border-box;\n  margin: 0;\n  padding: 0;\n}\n\n/* Card Component Box Model */\n.card-container {\n  width: 320px;\n  padding: 24px;\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  margin: 16px auto;\n  border-radius: 12px;\n  background-color: #1e293b;\n}",
+    "practical_exercise": "Calculate total calculated element width for a div with width: 300px, padding: 20px, and border: 2px under content-box vs border-box.",
+    "checkpoint_question": "With box-sizing: border-box enabled, what is the total rendered width of an element with width: 250px, padding: 20px, and border: 5px?",
+    "checkpoint_options": [
+      "300px",
+      "250px",
+      "275px",
+      "295px"
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "With border-box, total width remains exactly equal to the specified width (250px) because padding and border are absorbed inward.",
+    "topic": "HTML & CSS Foundations",
+    "difficulty": "Beginner"
+  },
+  "html-css-l4": {
+    "id": "html-css-l4",
+    "title": "CSS Flexbox One-Dimensional Layout Systems",
+    "type": "exercise",
+    "objective": "Construct dynamic flexible rows and columns using Flexbox container properties and item distribution controls.",
+    "concept_guide": "Flexbox (Flexible Box Layout) is a one-dimensional CSS layout system designed for distributing space and aligning items along a single axis (either row or column).\n\nWhen `display: flex` is declared on a container:\n1. Main Axis: Defined by flex-direction (row default, column). Justified using `justify-content` (flex-start, flex-end, center, space-between, space-around, space-evenly).\n2. Cross Axis: Perpendicular to the main axis. Aligned using `align-items` (flex-start, flex-end, center, stretch, baseline).\n\nIndividual flex items can grow to fill available space (`flex-grow: 1`), shrink when constrained (`flex-shrink: 1`), or establish a base size (`flex-basis: 200px`).",
+    "code_example": ".navbar-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 1.5rem;\n  padding: 1rem 2rem;\n  background-color: #0f172a;\n}\n\n.nav-links {\n  display: flex;\n  align-items: center;\n  gap: 1rem;\n  list-style: none;\n}",
+    "practical_exercise": "Create a flexbox container holding three pricing cards. Align the cards side by side with equal gaps and ensure all cards stretch to match the tallest card's height.",
+    "checkpoint_question": "Which Flexbox property controls item alignment along the MAIN axis?",
+    "checkpoint_options": [
+      "align-items",
+      "justify-content",
+      "flex-wrap",
+      "align-content"
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "justify-content aligns items along the primary main axis established by flex-direction.",
+    "topic": "HTML & CSS Foundations",
+    "difficulty": "Beginner"
+  },
+  "html-css-l5": {
+    "id": "html-css-l5",
+    "title": "CSS Grid Two-Dimensional Spatial Systems",
+    "type": "exercise",
+    "objective": "Design two-dimensional grid layouts with explicit columns, rows, fractional fr units, and responsive auto-fit minmax patterns.",
+    "concept_guide": "CSS Grid is a two-dimensional spatial layout system capable of handling both rows and columns simultaneously.\n\nUnlike Flexbox which works from content outward, Grid allows developers to define a structural layout mesh first and place content items into explicit grid tracks.\n\nKey Grid properties:\n- `grid-template-columns`: Defines track widths using pixels, percentages, or flexible fractional units (`1fr`).\n- `gap`: Defines spatial gutters between tracks.\n- Responsive grid magic: `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));` creates an auto-responsive layout grid that automatically wraps columns into rows without needing media queries!",
+    "code_example": ".dashboard-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\n  gap: 1.5rem;\n  padding: 2rem;\n}\n\n.grid-card {\n  background: #1e293b;\n  border-radius: 1rem;\n  padding: 1.5rem;\n}",
+    "practical_exercise": "Build a photo gallery grid displaying 6 images in a 3-column layout on desktop that dynamically reflows to 2 columns on tablet and 1 column on mobile screens.",
+    "checkpoint_question": "What does the fractional unit (1fr) represent in CSS Grid layout calculations?",
+    "checkpoint_options": [
+      "One frame per second in CSS animations.",
+      "One fraction of the remaining free space inside the grid container.",
+      "One fixed rem unit relative to the root font size.",
+      "One percentage of the total browser viewport height."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "The fr unit represents a fraction of the remaining available space inside the grid container after fixed tracks are allocated.",
+    "topic": "HTML & CSS Foundations",
+    "difficulty": "Beginner"
+  },
+  "html-css-l6": {
+    "id": "html-css-l6",
+    "title": "Responsive Design & Mobile-First Media Queries",
+    "type": "project",
+    "objective": "Assemble a responsive portfolio landing page layout using fluid typography, media queries, and mobile-first breakpoints.",
+    "concept_guide": "Mobile-First Responsive Web Design is the industry standard practice of designing the base CSS styles for small viewports first, then using progressive enhancement via min-width media queries to enhance layouts for larger screens.\n\nBenefits of Mobile-First design:\n1. Performance: Mobile devices load lightweight core styles without downloading unnecessary desktop desktop desktop rules.\n2. Usability: Forces developers to prioritize essential content before expanding spatial real estate.\n\nStandard Breakpoint Conventions:\n- Mobile Small: 320px - 480px\n- Tablet: 768px (`@media (min-width: 768px)`)\n- Desktop: 1024px (`@media (min-width: 1024px)`)\n- Ultra Wide: 1280px+",
+    "code_example": "/* Base Mobile Styles */\n.hero-container {\n  display: flex;\n  flex-direction: column;\n  padding: 1.5rem;\n}\n\n/* Tablet & Desktop Enhancement */\n@media (min-width: 768px) {\n  .hero-container {\n    flex-direction: row;\n    align-items: center;\n    padding: 4rem;\n  }\n}",
+    "practical_exercise": "Take your semantic web page layout and write media queries to transform a stacked 1-column mobile layout into a multi-column desktop layout above 768px.",
+    "checkpoint_question": "In mobile-first responsive design, which media query parameter is typically used to progressively enhance layouts?",
+    "checkpoint_options": [
+      "(max-width: 768px)",
+      "(min-width: 768px)",
+      "(orientation: portrait)",
+      "(device-pixel-ratio: 2)"
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "min-width queries target viewports at or above the specified width threshold, enabling mobile-first progressive enhancement.",
+    "topic": "HTML & CSS Foundations",
+    "difficulty": "Beginner"
+  },
+  "js-fund-l1": {
+    "id": "js-fund-l1",
+    "title": "ES6+ Syntax, Let/Const & Variable Scoping",
+    "type": "concept",
+    "objective": "Understand block scoping, temporal dead zone, immutability conventions, and template literal interpolation.",
+    "concept_guide": "JavaScript (ECMAScript) is the dynamic programming language of the web. ES6 (2015) revolutionized JavaScript by introducing modern variable declarations: `let` and `const`.\n\nScoping Differences:\n- `var`: Function-scoped or globally-scoped. Subject to hoisting quirks where variables can be accessed before declaration as undefined.\n- `let`: Block-scoped (enclosed within `{}`). Reassignable value.\n- `const`: Block-scoped. Cannot be reassigned after initialization.\n\nImportant: `const` prevents variable identifier reassignment, but does NOT make object or array contents immutable! Properties of a `const` object can still be modified.\n\nTemplate literals (` ${expr} `) enable clean string interpolation and multi-line string construction without cumbersome concatenation.",
+    "code_example": "const learner = { name: \"Alex\", score: 95 };\nlearner.score = 98; // Valid property mutation\n\nlet statusMessage = \"In Progress\";\nstatusMessage = \"Completed\"; // Valid variable reassignment\n\nconst summary = `Learner ${learner.name} scored ${learner.score}%. Status: ${statusMessage}.`;\nconsole.log(summary);",
+    "practical_exercise": "Write a function that accepts a user object and returns a formatted multi-line summary string using ES6 template literals and destructuring.",
+    "checkpoint_question": "What happens if you attempt to reassign a variable declared with const (e.g. const x = 10; x = 20;)?",
+    "checkpoint_options": [
+      "x silently converts to a let variable and accepts 20.",
+      "JavaScript throws a TypeError: Assignment to constant variable.",
+      "The variable value becomes undefined.",
+      "The value automatically rolls back to 10."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Reassigning a const variable throws an explicit TypeError at runtime.",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "Beginner"
+  },
+  "js-fund-l2": {
+    "id": "js-fund-l2",
+    "title": "Functions, Lexical Scope & Closures",
+    "type": "concept",
+    "objective": "Master first-class function expressions, arrow function lexical this binding, and closure scope preservation.",
+    "concept_guide": "Functions in JavaScript are first-class objects, meaning they can be assigned to variables, passed as arguments to other functions, and returned from function calls.\n\nA Closure is the combination of a function bundled together with references to its surrounding lexical environment. In plain terms: an inner function always retains access to variables declared in its outer parent scope, even after the parent function has finished executing!\n\nClosures enable data privacy, module encapsulation, and state preservation in functional programming patterns.",
+    "code_example": "function createScoreCounter(initialScore = 0) {\n  let count = initialScore; // Private encapsulated state\n\n  return {\n    increment: () => ++count,\n    decrement: () => --count,\n    getValue: () => count\n  };\n}\n\nconst alexCounter = createScoreCounter(10);\nalexCounter.increment(); // 11\nconsole.log(alexCounter.getValue()); // 11 (count is inaccessible directly)",
+    "practical_exercise": "Build a function named `createIdGenerator(prefix)` that returns a closure generating sequential IDs (e.g. `user_1`, `user_2`).",
+    "checkpoint_question": "What defines a closure in JavaScript?",
+    "checkpoint_options": [
+      "A function that automatically closes all open database connections.",
+      "An inner function that retains access to variables from its outer lexical scope after the outer function has returned.",
+      "A block of CSS code that closes a flexbox container.",
+      "An async function that returns a Promise resolved value."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "A closure allows an inner function to remember and access variables from its outer lexical environment even after execution completes.",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "Beginner"
+  },
+  "js-fund-l3": {
+    "id": "js-fund-l3",
+    "title": "DOM Node Selection & Event Delegation",
+    "type": "exercise",
+    "objective": "Interact with the browser DOM tree, attach event listeners, and utilize event delegation bubbling.",
+    "concept_guide": "The Document Object Model (DOM) is an object-oriented representation of the webpage hierarchy. JavaScript uses methods like `document.querySelector()` and `document.querySelectorAll()` to query DOM elements using standard CSS selector strings.\n\nEvent Propagation flows through three phases:\n1. Capturing Phase: Event descends from window to target element.\n2. Target Phase: Event reaches target node.\n3. Bubbling Phase: Event ascends from target node back up through parent DOM ancestors.\n\nEvent Delegation leverages event bubbling by attaching a single event listener to a parent element rather than attaching individual listeners to dozens of child elements. When a child is clicked, the event bubbles up to the parent listener, which inspects `event.target` to handle the action efficiently!",
+    "code_example": "const todoList = document.querySelector('#todo-list');\n\n// Event Delegation on parent container\ntodoList.addEventListener('click', (event) => {\n  if (event.target.matches('.delete-btn')) {\n    const item = event.target.closest('li');\n    item.remove();\n  }\n});",
+    "practical_exercise": "Create an interactive list where clicking any list item toggles a `.completed` CSS class on that specific item using a single event listener on the parent ul.",
+    "checkpoint_question": "Why is event delegation more efficient than attaching event listeners to 100 individual button elements?",
+    "checkpoint_options": [
+      "It uses less memory by creating only 1 listener function instead of 100 separate event listener instances.",
+      "It prevents the browser from making network HTTP calls.",
+      "It automatically encrypts user click events.",
+      "It forces the DOM to render in WebGL mode."
+    ],
+    "checkpoint_correct_index": 0,
+    "checkpoint_explanation": "Event delegation reduces memory overhead and simplifies dynamic DOM element management by using a single ancestor listener.",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "Beginner"
+  },
+  "js-fund-l4": {
+    "id": "js-fund-l4",
+    "title": "Promises & Async/Await Control Flow",
+    "type": "concept",
+    "objective": "Master single-threaded Event Loop execution, Promise states, and async/await syntax error handling.",
+    "concept_guide": "JavaScript executes in a single-threaded runtime environment driven by an Event Loop. Asynchronous operations like network requests, timers, and file I/O are offloaded to background Web APIs without blocking the main execution thread.\n\nA Promise is an object representing the eventual completion (or failure) of an asynchronous operation.\nA Promise exists in one of three states:\n1. Pending: Initial state, operation incomplete.\n2. Fulfilled: Operation completed successfully (`resolve(value)`).\n3. Rejected: Operation failed (`reject(error)`).\n\nES2017 introduced `async/await` as syntactic sugar over Promises, allowing developers to write asynchronous code that reads sequentially like synchronous code using `try / catch` error blocks.",
+    "code_example": "async function fetchLearnerProfile(userId) {\n  try {\n    const response = await fetch(`/api/profiles/${userId}`);\n    if (!response.ok) {\n      throw new Error(`HTTP Error ${response.status}: Failed to load profile`);\n    }\n    const profileData = await response.json();\n    return profileData;\n  } catch (error) {\n    console.error(\"Network fetch failed:\", error.message);\n    throw error;\n  }\n}",
+    "practical_exercise": "Write an async function `loadUserCurriculum(userId)` that fetches user data, validates response status, parses JSON, and logs the returned curriculum plan.",
+    "checkpoint_question": "What does the await keyword do when placed before a Promise expression inside an async function?",
+    "checkpoint_options": [
+      "It terminates the browser tab if the Promise rejects.",
+      "It pauses async function execution until the Promise resolves or rejects, returning the fulfilled value.",
+      "It forces the Promise to execute synchronously on a secondary multi-threaded worker.",
+      "It converts the Promise into a string representation."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "The await operator pauses async function execution until the Promise settles, resuming with the resolved value or throwing an error if rejected.",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "Beginner"
+  },
+  "js-fund-l5": {
+    "id": "js-fund-l5",
+    "title": "Fetch API & Remote Data Operations",
+    "type": "exercise",
+    "objective": "Execute HTTP GET, POST, and PUT operations using fetch, set request headers, and send JSON payloads.",
+    "concept_guide": "The Fetch API provides a modern interface for fetching web resources over HTTP/HTTPS protocols.\n\nImportant Fetch Behavior:\n- Fetch Promises only reject on actual network errors (e.g. lost internet connection).\n- Fetch Promises DO NOT reject on HTTP error status codes like 404 (Not Found) or 500 (Internal Server Error)! Developers must manually check `response.ok` (true if status is 200-299).\n\nWhen sending data to a server using POST or PUT:\n1. Specify `method: 'POST'`.\n2. Pass `headers: { 'Content-Type': 'application/json' }`.\n3. Convert data payload into a JSON string using `body: JSON.stringify(data)`.",
+    "code_example": "async function saveLessonCompletion(courseId, lessonId) {\n  const payload = { course_id: courseId, lesson_id: lessonId };\n  \n  const res = await fetch('/api/completions', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify(payload)\n  });\n\n  if (!res.ok) {\n    throw new Error(`Failed to save completion: ${res.statusText}`);\n  }\n\n  return await res.json();\n}",
+    "practical_exercise": "Write a function that posts a new note object `{ title: 'JS Study Note', content: 'Closures are powerful' }` to `/api/notes` and logs the server response.",
+    "checkpoint_question": "Why must you check response.ok when using the Fetch API?",
+    "checkpoint_options": [
+      "Because fetch automatically deletes local files if response is false.",
+      "Because fetch does not reject its promise on 404 or 500 HTTP error status codes.",
+      "Because response.ok is required to parse CSS stylesheets.",
+      "Because fetch only works when response.ok is set to string 'ok'."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Fetch resolves its promise normally even if the server returns 404 or 500 error status codes, requiring developers to inspect response.ok.",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "Beginner"
+  },
+  "js-fund-l6": {
+    "id": "js-fund-l6",
+    "title": "Dynamic Client Application Capstone",
+    "type": "project",
+    "objective": "Assemble a dynamic client-side application featuring modular state management, DOM rendering, and API persistence.",
+    "concept_guide": "Building production-ready client applications requires combining DOM manipulation, event handling, asynchronous fetching, and state management into a clean architecture.\n\nArchitecture Principles:\n1. Single Source of Truth: Store application state in a central object or module.\n2. Render Function: Re-render UI views dynamically whenever application state updates.\n3. Separation of Concerns: Decouple API fetching logic from DOM presentation code.",
+    "code_example": "class CourseApp {\n  constructor(apiEndpoint) {\n    this.endpoint = apiEndpoint;\n    this.state = { lessons: [], activeId: null };\n  }\n\n  async init() {\n    this.state.lessons = await fetch(this.endpoint).then(res => res.json());\n    this.render();\n  }\n\n  render() {\n    const list = document.querySelector('#app');\n    list.innerHTML = this.state.lessons.map(l => `\n      <div class=\"card\">${l.title}</div>\n    `).join('');\n  }\n}",
+    "practical_exercise": "Build an interactive task tracker app where users can add tasks via a form, toggle completion state, filter by active/completed status, and persist tasks in localStorage.",
+    "checkpoint_question": "What is the primary benefit of separating application state from DOM presentation code?",
+    "checkpoint_options": [
+      "It makes state predictable, easier to test, and enables consistent UI rendering when data changes.",
+      "It speeds up internet connection bandwidth.",
+      "It bypasses CORS security policies.",
+      "It automatically minifies JavaScript source files."
+    ],
+    "checkpoint_correct_index": 0,
+    "checkpoint_explanation": "Decoupling state from DOM representation ensures state changes drive predictable, bug-free UI updates.",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "Beginner"
+  },
+  "git-l1": {
+    "id": "git-l1",
+    "title": "Version Control Concepts & Local Repositories",
+    "type": "concept",
+    "objective": "Initialize Git repositories, stage changes, and create atomic commits with descriptive commit messages.",
+    "concept_guide": "Git is a distributed version control system (DVCS) that records changes to files over time, allowing developers to recall specific versions, compare code diffs, and collaborate concurrently.\n\nGit maintains three main states for your files:\n1. Working Tree: The active filesystem directory where files are created and edited.\n2. Staging Index (`git add`): The staging area where selected file changes are prepared into atomic snapshots.\n3. Git History (`git commit`): The permanent database of committed snapshots recorded with unique SHA-1 hashes.",
+    "code_example": "# Initialize local repository\ngit init\n\n# Check working tree status\ngit status\n\n# Stage specific files\ngit add index.html src/styles.css\n\n# Commit staged snapshot with descriptive message\ngit commit -m \"feat: initialize HTML structure and CSS reset\"",
+    "practical_exercise": "Create a local project directory, initialize a git repository, add a README.md file, stage it, and commit it with a clear commit message.",
+    "checkpoint_question": "What is the primary purpose of the Git Staging Index (git add)?",
+    "checkpoint_options": [
+      "To upload files directly to GitHub servers.",
+      "To allow developers to select and review granular file changes before recording them into a permanent commit snapshot.",
+      "To automatically format code with Prettier.",
+      "To compile TypeScript code into JavaScript."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "The staging index acts as a preparation area where developers choose exactly which changes to bundle into the next commit.",
+    "topic": "Git & GitHub Essentials",
+    "difficulty": "Beginner"
+  },
+  "git-l2": {
+    "id": "git-l2",
+    "title": "Branching Strategies & Feature Isolation",
+    "type": "exercise",
+    "objective": "Create, switch, and merge feature branches to isolate work without destabilizing the main production branch.",
+    "concept_guide": "Branching is one of Git's most powerful capabilities. A branch represents an independent line of development pointing to a specific commit.\n\nBranching Workflows:\n- `main` / `master`: Production-ready code branch. Should always be stable and deployable.\n- `feature/*`: Short-lived isolated branches created for specific features, bug fixes, or experiments.\n\nCreating feature branches ensures that incomplete code never breaks production environments.",
+    "code_example": "# Create and switch to new feature branch\ngit checkout -b feature/auth-system\n\n# Perform edits and commit work\ngit add .\ngit commit -m \"feat: implement login form validation\"\n\n# Switch back to main branch and merge feature\ngit checkout main\ngit merge feature/auth-system",
+    "practical_exercise": "Create a branch named `feature/footer`, add a footer element to your index.html file, commit the change, switch back to main, and merge the branch.",
+    "checkpoint_question": "Which Git command creates a new branch and immediately switches your working tree to it?",
+    "checkpoint_options": [
+      "git branch new-name",
+      "git checkout -b new-name",
+      "git merge new-name",
+      "git push -u origin new-name"
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "git checkout -b creates the specified branch and checks it out into your active working directory in one command.",
+    "topic": "Git & GitHub Essentials",
+    "difficulty": "Beginner"
+  },
+  "git-l3": {
+    "id": "git-l3",
+    "title": "Remote Repositories & GitHub Synchronization",
+    "type": "concept",
+    "objective": "Connect local Git repositories to GitHub remote origins, push branches, and pull upstream team updates.",
+    "concept_guide": "GitHub is a cloud platform for hosting Git repositories, providing web interfaces, access controls, collaboration tools, and CI/CD automation pipelines.\n\nCommands for Remote Sync:\n- `git remote add origin <url>`: Links local repository to remote GitHub repository.\n- `git push -u origin <branch>`: Uploads local branch commits to GitHub and sets upstream tracking.\n- `git fetch`: Downloads new remote commits without modifying your local working tree.\n- `git pull`: Performs a `git fetch` followed by `git merge` to integrate remote changes into your active branch.",
+    "code_example": "# Link local repo to GitHub remote origin\ngit remote add origin https://github.com/user/learnpilot-project.git\n\n# Push main branch to remote and set upstream tracking\ngit push -u origin main\n\n# Pull latest team updates from remote main branch\ngit pull origin main",
+    "practical_exercise": "Create a GitHub repository online, connect your local repository via `git remote add origin`, and push your main branch.",
+    "checkpoint_question": "What is the key difference between git fetch and git pull?",
+    "checkpoint_options": [
+      "git fetch deletes local commits, while git pull keeps them.",
+      "git fetch downloads remote metadata without modifying working files, whereas git pull fetches and automatically merges changes into your active branch.",
+      "git fetch requires admin password privileges, while git pull does not.",
+      "git fetch only works on Windows operating systems."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "git fetch safely inspects remote changes without touching your working files, while git pull immediately fetches and merges.",
+    "topic": "Git & GitHub Essentials",
+    "difficulty": "Beginner"
+  },
+  "git-l4": {
+    "id": "git-l4",
+    "title": "Pull Requests & Collaborative Code Reviews",
+    "type": "exercise",
+    "objective": "Submit GitHub Pull Requests (PRs), participate in code reviews, and automate quality checks before merging.",
+    "concept_guide": "A Pull Request (PR) is a GitHub feature that proposes integrating changes from a feature branch into a target branch (e.g. main).\n\nPR Workflow Benefits:\n1. Code Review: Teammates review diffs, leave comments, and suggest improvements.\n2. Automated Testing: CI/CD runners (GitHub Actions) run automated test suites and linters.\n3. Protected Branches: Prevents direct unreviewed commits to production branches.",
+    "code_example": "# Create PR using GitHub CLI\ngh pr create \\\n  --title \"feat: implement standalone course learning workspace\" \\\n  --body \"Adds interactive course workspace with lesson stepper and progress persistence.\" \\\n  --base main \\\n  --head feature/courses-learning-workspace",
+    "practical_exercise": "Push a feature branch to GitHub, navigate to the GitHub repository web UI, open a Pull Request against main, and inspect the unified code diff view.",
+    "checkpoint_question": "Why are Pull Requests used in team software development?",
+    "checkpoint_options": [
+      "To force developers to re-install Git every week.",
+      "To enable code reviews, automated CI test runs, and peer feedback before merging code into main branches.",
+      "To speed up CSS flexbox rendering.",
+      "To compile database migrations into SQL files."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Pull Requests foster quality control through peer code reviews and automated CI checks before code enters production.",
+    "topic": "Git & GitHub Essentials",
+    "difficulty": "Beginner"
+  },
+  "git-l5": {
+    "id": "git-l5",
+    "title": "Resolving Merge Conflicts",
+    "type": "exercise",
+    "objective": "Identify conflict markers (<<<<<<< HEAD), resolve competing edits across branches, and finalize merge commits.",
+    "concept_guide": "A Merge Conflict occurs when Git tries to merge two branches that modified the exact same lines of code in conflicting ways, or when one branch deleted a file that another branch edited.\n\nGit marks conflicting files and inserts conflict markers directly into the code:\n- `<<<<<<< HEAD`: Indicates changes on your current active branch.\n- `=======`: Separator dividing opposing changes.\n- `>>>>>>> branch-name`: Indicates incoming changes from the branch being merged.\n\nTo resolve:\n1. Inspect conflicting files and edit code to keep intended changes.\n2. Remove conflict marker lines (`<<<<<<<`, `=======`, `>>>>>>>`).\n3. Stage resolved files (`git add`) and commit (`git commit`).",
+    "code_example": "<<<<<<< HEAD\nconst API_PORT = process.env.PORT || 3000;\n=======\nconst API_PORT = process.env.PORT || 8080;\n>>>>>>> feature/port-update\n\n/* RESOLVED EDITED CODE */\nconst API_PORT = process.env.PORT || 3000;",
+    "practical_exercise": "Simulate a merge conflict by editing line 1 of README.md on two different branches, attempting a merge, removing conflict markers, and committing the resolution.",
+    "checkpoint_question": "How do you complete a merge after manually resolving conflict markers in your code editor?",
+    "checkpoint_options": [
+      "Run git abort --force.",
+      "Stage the resolved files with git add and execute git commit.",
+      "Delete the .git hidden directory.",
+      "Restart the computer operating system."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Staging the resolved files with git add signals to Git that conflicts are settled, allowing git commit to record the merge.",
+    "topic": "Git & GitHub Essentials",
+    "difficulty": "Beginner"
+  },
+  "react-l1": {
+    "id": "react-l1",
+    "title": "Declarative Components & JSX Syntax Rules",
+    "type": "concept",
+    "objective": "Understand Virtual DOM reconciliation, declarative component rendering, and JSX syntax transpilation.",
+    "concept_guide": "React is a declarative component-driven JavaScript library for building user interfaces. Instead of manually manipulating DOM nodes using imperative JavaScript (`document.createElement`), React developers declare what the UI should look like for a given state using JSX (JavaScript XML).\n\nVirtual DOM: React maintains a lightweight Virtual DOM representation in memory. When state updates occur, React renders a new Virtual DOM tree, performs a diffing algorithm (Reconciliation), and efficiently updates only the changed real DOM nodes.\n\nJSX Rules:\n1. Component function names MUST start with a capital letter (`MyComponent`).\n2. JSX tags must return a single root element or Fragment (`<>`).\n3. Use `className` instead of `class` and `htmlFor` instead of `for`.\n4. Embed JavaScript expressions inside curly braces `{expression}`.",
+    "code_example": "export function LearnerCard({ name, role }: { name: string; role: string }) {\n  const isLead = role === \"Lead Developer\";\n\n  return (\n    <div className=\"card-container\">\n      <h3 className=\"text-sm font-bold\">{name}</h3>\n      <span className={isLead ? \"badge-gold\" : \"badge-blue\"}>\n        {role}\n      </span>\n    </div>\n  );\n}",
+    "practical_exercise": "Build a functional React component named `CourseBadge` that accepts `title` and `difficulty` as props and renders styled HTML with dynamic conditional colors.",
+    "checkpoint_question": "Why must React components return a single root element or Fragment (<>...</>)?",
+    "checkpoint_options": [
+      "To allow CSS grid to render 3D graphics.",
+      "Because JSX transpiles into React.createElement function calls which expect a single parent element returned.",
+      "Because web browsers reject pages with more than 1 HTML tag.",
+      "To automatically save component data to local storage."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "JSX is transpiled into JavaScript function calls, requiring a single enclosing root element or fragment.",
+    "topic": "React & Component Architecture",
+    "difficulty": "Intermediate"
+  },
+  "react-l2": {
+    "id": "react-l2",
+    "title": "Props Unidirectional Data Flow",
+    "type": "exercise",
+    "objective": "Pass read-only props down component hierarchies and pass event handler callbacks up for parent state updates.",
+    "concept_guide": "Data in React flows unidirectionally downward from parent components to child components via `props` (properties).\n\nProps Principles:\n- Props are IMMUTABLE read-only objects. A child component must NEVER attempt to modify its own props.\n- To communicate from child to parent, the parent passes a callback function down as a prop. When an event occurs in the child, it invokes the parent callback, allowing the parent to update its state!",
+    "code_example": "// Child Component\nfunction FilterButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {\n  return (\n    <button\n      onClick={onClick}\n      className={active ? \"bg-primary text-white\" : \"bg-muted text-gray font-normal\"}\n    >\n      {label}\n    </button>\n  );\n}",
+    "practical_exercise": "Create a `LessonStepper` component where parent state tracks active lesson index and child `NextButton` and `PrevButton` trigger parent index increment and decrement callbacks.",
+    "checkpoint_question": "What happens if a child component attempts to directly mutate a prop (e.g. props.title = 'New Title')?",
+    "checkpoint_options": [
+      "React updates the parent component state automatically.",
+      "React throws a runtime error because props are immutable read-only objects.",
+      "The browser reloads the page.",
+      "The CSS background color turns red."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Props are strictly read-only inputs in React; mutating props violates unidirectional data flow and triggers errors.",
+    "topic": "React & Component Architecture",
+    "difficulty": "Intermediate"
+  },
+  "react-l3": {
+    "id": "react-l3",
+    "title": "State Management with useState Hook",
+    "type": "exercise",
+    "objective": "Declare component state, perform immutable state updates, and handle controlled form inputs using useState.",
+    "concept_guide": "State represents data that changes over time within a component. Calling `useState(initialValue)` returns an array containing two elements:\n1. Current State Value.\n2. Setter Function: Function used to update state and trigger a component re-render.\n\nState Update Rules:\n- Never mutate state directly (`state.count = 5` ❌). Always call the setter function (`setCount(5)` ✅).\n- When next state depends on previous state, pass a functional updater (`setCount(prev => prev + 1)`) to avoid closure stale state bugs during batched updates.",
+    "code_example": "import { useState } from \"react\";\n\nexport function Counter() {\n  const [count, setCount] = useState(0);\n\n  const handleIncrement = () => {\n    setCount((prevCount) => prevCount + 1);\n  };\n\n  return (\n    <button onClick={handleIncrement} className=\"btn-primary\">\n      Completed Lessons: {count}\n    </button>\n  );\n}",
+    "practical_exercise": "Build a controlled search input component using useState where typing updates query state and filters an array of course titles in real-time.",
+    "checkpoint_question": "Why should you pass a functional updater (setCount(prev => prev + 1)) when deriving next state from current state?",
+    "checkpoint_options": [
+      "It forces React to bypass Virtual DOM diffing.",
+      "It guarantees working with the most up-to-date state value even during batched asynchronous state updates.",
+      "It converts the state value into a database string.",
+      "It prevents the button from being double-clicked."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Functional state updaters receive the guaranteed latest pending state value during React batched update cycles.",
+    "topic": "React & Component Architecture",
+    "difficulty": "Intermediate"
+  },
+  "react-l4": {
+    "id": "react-l4",
+    "title": "Side Effects & useEffect Lifecycle",
+    "type": "concept",
+    "objective": "Execute data fetching, DOM subscriptions, and timer side effects while managing dependency arrays and cleanup functions.",
+    "concept_guide": "Side effects are operations that interact with the outside world beyond React's pure rendering cycle (e.g. API fetching, DOM listeners, timers, web sockets).\n\nThe `useEffect(effectFunction, dependencyArray)` hook synchronizes side effects with component lifecycle:\n1. No Dependency Array (`useEffect(fn)`): Runs after EVERY render.\n2. Empty Dependency Array (`useEffect(fn, [])`): Runs ONCE after initial component mount.\n3. Specific Dependencies (`useEffect(fn, [id])`): Runs on initial mount AND whenever specified dependency values change.\n\nEffect Cleanup: Returning a cleanup function from `useEffect` ensures timer intervals, event listeners, and API subscriptions are cleaned up before component unmount or re-render.",
+    "code_example": "useEffect(() => {\n  let isMounted = true;\n\n  async function loadCourse() {\n    const data = await fetchCourseData(courseId);\n    if (isMounted) setCourse(data);\n  }\n\n  loadCourse();\n\n  return () => {\n    isMounted = false; // Cleanup flag preventing memory leaks\n  };\n}, [courseId]);",
+    "practical_exercise": "Write a useEffect hook that attaches a window resize event listener to update a `windowWidth` state variable and returns a cleanup function calling `removeEventListener`.",
+    "checkpoint_question": "When does the cleanup function returned from a useEffect hook execute?",
+    "checkpoint_options": [
+      "Only when the browser window closes.",
+      "Before the component unmounts and before re-running the effect on dependency changes.",
+      "Immediately before the first initial render.",
+      "Whenever a user clicks a button."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Cleanup functions execute before component unmounting and prior to re-executing the effect when dependencies change.",
+    "topic": "React & Component Architecture",
+    "difficulty": "Intermediate"
+  },
+  "react-l5": {
+    "id": "react-l5",
+    "title": "Custom Hooks & Logic Reusability",
+    "type": "exercise",
+    "objective": "Extract component state and effect logic into reusable custom hooks prefixed with use...",
+    "concept_guide": "Custom Hooks are JavaScript functions whose names start with `use` and that call other React hooks (`useState`, `useEffect`, `useCallback`).\n\nCustom hooks allow developers to extract complex stateful business logic out of UI component views into reusable, testable utility functions!",
+    "code_example": "import { useState, useEffect } from \"react\";\n\nexport function useLocalStorage<T>(key: string, initialValue: T) {\n  const [storedValue, setStoredValue] = useState<T>(() => {\n    try {\n      const item = window.localStorage.getItem(key);\n      return item ? JSON.parse(item) : initialValue;\n    } catch {\n      return initialValue;\n    }\n  });\n\n  useEffect(() => {\n    window.localStorage.setItem(key, JSON.stringify(storedValue));\n  }, [key, storedValue]);\n\n  return [storedValue, setStoredValue] as const;\n}",
+    "practical_exercise": "Build a custom hook named `useFetch(url)` returning `{ data, loading, error }` and consume it inside a `CourseList` component.",
+    "checkpoint_question": "What naming convention must all React custom hooks follow?",
+    "checkpoint_options": [
+      "Must end with ...Component",
+      "Must start with the lowercase prefix 'use' (e.g. useCourseProgress)",
+      "Must be written in capital letters (e.g. USE_DATA)",
+      "Must start with 'get'"
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "React requires custom hooks to start with 'use' so linter rules can verify hook usage rules automatically.",
+    "topic": "React & Component Architecture",
+    "difficulty": "Intermediate"
+  },
+  "react-l6": {
+    "id": "react-l6",
+    "title": "Interactive Course Application Capstone",
+    "type": "project",
+    "objective": "Build a full-featured interactive React learning application with tabbed views, custom hooks, and persistent completion state.",
+    "concept_guide": "Assembling scalable React applications requires organizing components into clear directory structures, maintaining clean prop interfaces, and using custom hooks for state management.",
+    "code_example": "export default function CourseWorkspaceApp() {\n  const { course, loading } = useCourseData();\n  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);\n\n  if (loading) return <LoadingSpinner />;\n\n  return (\n    <div className=\"flex h-screen border border-border\">\n      <LessonSidebar course={course} activeId={activeLessonId} onSelect={setActiveLessonId} />\n      <LessonWorkspace lessonId={activeLessonId} />\n    </div>\n  );\n}",
+    "practical_exercise": "Build an interactive course learning workspace application with lesson selection sidebar, reading area, and progress calculation.",
+    "checkpoint_question": "Which component architecture pattern promotes high maintainability and testability in React applications?",
+    "checkpoint_options": [
+      "Writing all application code inside a single 5000-line index.js file.",
+      "Decomposing UI into small, focused presentational components and extracting stateful logic into custom hooks.",
+      "Using inline style attributes for every element.",
+      "Storing all state in global window variables."
+    ],
+    "checkpoint_correct_index": 1,
+    "checkpoint_explanation": "Separating UI into modular presentational components and isolating stateful logic in custom hooks promotes maintainability.",
+    "topic": "React & Component Architecture",
+    "difficulty": "Intermediate"
+  }
+}
