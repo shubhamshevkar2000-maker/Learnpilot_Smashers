@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AppShell } from "@/components/layout/app-shell"
 import { PageHeader } from "@/components/layout/page-header"
@@ -170,7 +171,10 @@ function LearningPathContent() {
   const hasPlan = Boolean(curriculum && curriculum.plan)
   const modulesList = curriculum?.modules || []
   const completedModulesCount = modulesList.filter((m) => m.status === "completed").length
-
+return (
++    <AppShell maxWidth="900px">
++      <div className="space-y-8">
++        <header className="space-y-2">
             <h1 className="font-serif text-2xl font-normal tracking-tight text-foreground sm:text-3xl">
               {hasPlan ? "Personalized Roadmap" : "Personalized Learning Path"}
             </h1>
