@@ -44,8 +44,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress", active: true },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
-  { id: "settings", label: "Settings", icon: Settings, href: "#" },
+  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 
 export default function ProgressPage() {
@@ -203,7 +203,7 @@ function ProgressContent() {
         </div>
       </aside>
 
-      <main className="flex-1 px-4 py-4 sm:px-6 md:px-10 xl:px-12 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div className="max-w-[1000px] space-y-8 pb-12">
           
           <div className="flex items-center justify-between pb-2 border-b border-border/40 lg:hidden">

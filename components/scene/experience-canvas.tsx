@@ -95,6 +95,15 @@ function SceneContents({
 }
 
 
+// Suppress known R3F + Three.js r170+ deprecation warning for THREE.Clock
+if (typeof console !== 'undefined') {
+  const originalWarn = console.warn
+  console.warn = (...args) => {
+    if (typeof args[0] === 'string' && args[0].includes('THREE.Clock: This module has been deprecated')) return
+    originalWarn(...args)
+  }
+}
+
 export function ExperienceCanvas() {
   const { theme } = useTheme()
   const { isMobile, reducedMotion, ready } = useEnvironment()

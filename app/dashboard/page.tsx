@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AppShell } from "@/components/layout/app-shell"
+import { PageHeader } from "@/components/layout/page-header"
 import {
   Compass,
   Layers,
@@ -19,6 +21,9 @@ import {
   ArrowRight,
   Sparkles,
   Calendar,
+  TrendingUp,
+  Brain,
+  Rocket,
 } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { ProtectedRoute } from "@/components/auth/protected-route"
@@ -44,18 +49,6 @@ interface NavItem {
   active?: boolean
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard", active: true },
-  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
-  { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
-  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
-  { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
-  { id: "settings", label: "Settings", icon: Settings, href: "#" },
-]
-
 export default function DashboardPage() {
   return (
     <ProtectedRoute>
@@ -74,7 +67,6 @@ function DashboardContent() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null)
   const [curriculum, setCurriculum] = useState<ActiveCurriculum | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeToast, setActiveToast] = useState<string | null>(null)
 
   // Fetch real profile & existing plan
@@ -162,22 +154,6 @@ function DashboardContent() {
     return "Good evening"
   }
 
-  const handleNavClick = (item: NavItem) => {
-    if (item.href !== "#") {
-      router.push(item.href)
-      return
-    }
-    setActiveToast(`${item.label} will be available in the upcoming phase.`)
-    setTimeout(() => {
-      setActiveToast(null)
-    }, 2800)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.replace("/login")
-  }
-
   if (loading) {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background text-foreground">
@@ -194,7 +170,6 @@ function DashboardContent() {
   // Derived real values
   const displayName = profile?.display_name || user?.user_metadata?.full_name || "Learner"
   const learningGoal = profile?.learning_goal || "Not set"
-  const avatarInitial = displayName.charAt(0).toUpperCase() || "L"
 
   // Position nodes spatially along the orbital ellipses
   const orbitalNodes = curriculum?.modules.map((mod, idx) => {
@@ -212,7 +187,7 @@ function DashboardContent() {
   }) || []
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300">
+    <AppShell maxWidth="1400px">
       {/* Toast Notification */}
       {activeToast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-sm backdrop-blur-md">
@@ -220,104 +195,10 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Mobile Drawer Overlay */}
-      {mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
-        />
-      )}
-
-      {/* LEFT COLUMN: Persistent Navigation */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div>
-          {/* Brand Header */}
-          <div className="flex items-center justify-between pb-5">
-            <Link
-              href="/"
-              className="text-[11px] font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
-            >
-              LEARNPILOT
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground lg:hidden"
-              aria-label="Close navigation"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
-                    item.active
-                      ? "font-medium text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
-                >
-                  <Icon size={14} className={item.active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        {/* User Identity & Controls */}
-        <div className="space-y-2.5 pt-3 border-t border-border/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">
-                {avatarInitial}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
-          >
-            <LogOut size={12} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
-
       {/* CONTINUOUS WORKSPACE SURFACE */}
-      <div className="flex flex-1 flex-col lg:flex-row overflow-y-auto">
+      <div className="flex flex-col lg:flex-row gap-8">
         {/* CENTER COLUMN: Main Learning Workspace */}
-        <main className="flex-1 px-4 py-4 sm:px-6 md:px-8 xl:px-9">
-          <div className="max-w-3xl space-y-4">
-            {/* Mobile Top Bar */}
-            <div className="flex items-center justify-between pb-2 border-b border-border/40 lg:hidden">
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-foreground hover:bg-muted"
-                aria-label="Open navigation"
-              >
-                <Menu size={18} />
-              </button>
-              <span className="text-[11px] font-semibold tracking-[0.25em] text-foreground">
-                LEARNPILOT
-              </span>
-              <div className="w-10" />
-            </div>
-
+        <div className="flex-1 space-y-8">
             {/* Top Compact Learner Greeting */}
             <header className="space-y-0.5">
               <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
@@ -466,11 +347,10 @@ function DashboardContent() {
                 </div>
               </div>
             </section>
-          </div>
-        </main>
+        </div>
 
-        {/* RIGHT COLUMN: Compact Contextual Learning Intelligence */}
-        <aside className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-border/40 px-5 py-5 space-y-5 bg-background/40">
+        {/* RIGHT COLUMN: Schedule & Upcoming */}
+        <div className="w-full lg:w-72 lg:shrink-0 space-y-6 pt-2">
           {/* Section: Today's Journey */}
           <div className="space-y-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
@@ -531,8 +411,8 @@ function DashboardContent() {
               </Link>
             </div>
           </div>
-        </aside>
+        </div>
       </div>
-    </div>
+    </AppShell>
   )
 }

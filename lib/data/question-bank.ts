@@ -315,6 +315,84 @@ export const QUESTION_BANK: Record<string, Omit<AssessmentQuestion, "id">[]> = {
   ],
   
   // ---------------------------------------------------------
+  // PYTHON
+  // ---------------------------------------------------------
+  "python": [
+    {
+      question: "Which of the following is immutable in Python?",
+      options: [
+        { id: "a", text: "list" },
+        { id: "b", text: "dict" },
+        { id: "c", text: "set" },
+        { id: "d", text: "tuple" },
+      ],
+      correct_answer_id: "d",
+      explanation: "Tuples in Python are immutable, meaning their elements cannot be changed after creation.",
+      topic: "Python Fundamentals",
+      difficulty: "beginner",
+      questionType: "mcq"
+    },
+    {
+      question: "You want to dynamically modify the behavior of a function without changing its source code. What Python feature should you use?",
+      options: [
+        { id: "a", text: "Inheritance" },
+        { id: "b", text: "Decorators" },
+        { id: "c", text: "Metaclasses" },
+        { id: "d", text: "Generators" },
+      ],
+      correct_answer_id: "b",
+      explanation: "Decorators wrap a function, allowing you to execute code before and after the wrapped function runs.",
+      topic: "Advanced Python",
+      difficulty: "intermediate",
+      questionType: "mcq"
+    },
+    {
+      question: "What is the primary advantage of using a generator (yield) instead of returning a list?",
+      options: [
+        { id: "a", text: "Generators are more memory efficient because they yield items one at a time lazily." },
+        { id: "b", text: "Generators execute much faster than standard functions." },
+        { id: "c", text: "Generators automatically sort the data." },
+        { id: "d", text: "Generators bypass the Global Interpreter Lock (GIL)." },
+      ],
+      correct_answer_id: "a",
+      explanation: "Generators do not store all items in memory at once; they generate them on the fly.",
+      topic: "Python Generators",
+      difficulty: "intermediate",
+      questionType: "mcq"
+    },
+    {
+      question: "Why does this code raise an UnboundLocalError?",
+      codeSnippet: "count = 0\ndef increment():\n    count += 1\n    return count\nincrement()",
+      options: [
+        { id: "a", text: "Because count is an integer and cannot be incremented." },
+        { id: "b", text: "Because Python assumes count is a local variable since it is assigned within the function, but it has not been initialized locally." },
+        { id: "c", text: "Because you cannot return variables named count." },
+        { id: "d", text: "Because count should be defined as const." },
+      ],
+      correct_answer_id: "b",
+      explanation: "When you assign to a variable in a scope, Python treats it as local. To modify the global count, you must declare 'global count'.",
+      topic: "Python Scope",
+      difficulty: "beginner",
+      questionType: "debugging"
+    },
+    {
+      question: "Write a function to return the sum of all keyword arguments passed to it.",
+      language: "python",
+      starterCode: "def sum_kwargs(**kwargs):\n    # your code here\n    pass",
+      testCases: [
+        { input: "a=1, b=2", expected: "3" },
+        { input: "x=10, y=5, z=5", expected: "20" }
+      ],
+      expectedBehavior: "Sum all values in the kwargs dictionary.",
+      hints: ["Use kwargs.values()", "Use the built-in sum() function"],
+      explanation: "kwargs is a dictionary of keyword arguments. You can sum its values easily.",
+      topic: "Python Functions",
+      difficulty: "intermediate",
+      questionType: "code_write"
+    }
+  ],
+
+  // ---------------------------------------------------------
   // FALLBACK / GENERAL
   // ---------------------------------------------------------
   "general": [

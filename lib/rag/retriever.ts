@@ -1,7 +1,7 @@
 // @ts-nocheck
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
-import { DATA_ANALYTICS_COURSES, type CourseLesson } from "@/lib/services/courses-service"
+import { CONTENT_REGISTRY } from "@/lib/generator/content-registry"
 
 export interface RAGRetrievalInput {
   supabase: SupabaseClient<Database>
@@ -113,23 +113,21 @@ ${todaysActs.map((a) => `  * [${a.is_completed ? "Completed" : "In Progress"}] $
       .split(/\s+/)
       .filter((t) => t.length > 2)
 
-    const scoredLessons: { lesson: CourseLesson; score: number; courseTitle: string }[] = []
+    const scoredLessons: { lesson: any; score: number; courseTitle: string }[] = []
 
-    for (const course of DATA_ANALYTICS_COURSES) {
-      for (const lesson of course.lessons) {
-        let score = 0
-        const searchableText = (lesson.title + " " + lesson.objective + " " + lesson.concept_guide + " " + course.title + " " + course.category)
-          .toLowerCase()
+    for (const content of Object.values(CONTENT_REGISTRY)) {
+      let score = 0
+      const searchableText = (content.title + " " + content.objective + " " + (content.concept_guide || "") + " " + (content.topic || "") + " " + (content.skill || ""))
+        .toLowerCase()
 
-        for (const token of queryTokens) {
-          if (searchableText.includes(token)) {
-            score += 1
-          }
+      for (const token of queryTokens) {
+        if (searchableText.includes(token)) {
+          score += 1
         }
+      }
 
-        if (score > 0) {
-          scoredLessons.push({ lesson, score, courseTitle: course.title })
-        }
+      if (score > 0) {
+        scoredLessons.push({ lesson: content, score, courseTitle: content.topic || "Unknown Course" })
       }
     }
 
@@ -139,8 +137,8 @@ ${todaysActs.map((a) => `  * [${a.is_completed ? "Completed" : "In Progress"}] $
     if (topLessons.length > 0) {
       relevantLessonsText = topLessons
         .map(({ lesson, courseTitle }) => {
-          const guideSnippet = lesson.concept_guide.slice(0, 300).replace(/\n+/g, " ")
-          return `• Course: "${courseTitle}" -> Lesson: "${lesson.title}" (${lesson.lesson_type}, ${lesson.estimated_minutes} min)\n  Objective: ${lesson.objective}\n  Core Concept: ${guideSnippet}...`
+          const guideSnippet = (lesson.concept_guide || lesson.objective || "").slice(0, 300).replace(/\n+/g, " ")
+          return `• Topic: "${courseTitle}" -> Lesson: "${lesson.title}" (${lesson.type})\n  Objective: ${lesson.objective}\n  Core Concept: ${guideSnippet}...`
         })
         .join("\n\n")
     }

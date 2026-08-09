@@ -127,178 +127,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 4. Verify AI Provider Configuration (Groq / OpenAI / Gemini)
-    const groqKey = process.env.GROQ_API_KEY
-    const openaiKey = process.env.OPENAI_API_KEY
-    const geminiKey = process.env.GEMINI_API_KEY
+    // 4. Fetch Assessment Results and Completed Modules to feed the Recommendation Engine
+    const { data: assessmentResults } = await supabase
+      .from("assessment_results")
+      .select("*")
+      .eq("user_id", user.id)
 
-    const systemPrompt = `You are LearnPilot, an expert adaptive learning designer. Produce a strictly structured JSON object matching this schema:
-{
-  "title": "Short Plan Title",
-  "goal_summary": "1-2 sentence tailored goal summary",
-  "modules": [
-    {
-      "title": "Module Title",
-      "description": "Clear overview of what will be learned",
-      "rationale": "Why this module is placed here in the trajectory",
-      "sequence_order": 1,
-      "activities": [
-        {
-          "title": "Granular Activity Title",
-          "activity_type": "concept" | "exercise" | "project" | "reflection",
-          "sequence_order": 1,
-          "estimated_minutes": 20,
-          "content_id": "optional-content-id-string"
-        }
-      ]
-    }
-  ]
-}
+    const { data: completedModulesData } = await supabase
+      .from("module_activities")
+      .select("module_id")
+      .eq("user_id", user.id)
+      .eq("is_completed", true)
 
-PEDAGOGICAL & ARCHITECTURAL GUIDELINES:
+    const completedModuleIds = Array.from(new Set(completedModulesData?.map(m => m.module_id) || []))
 
-1. SEPARATION OF CURRICULUM AND PACING:
-   - The Learning Path represents the COMPLETE long-term educational curriculum required to reach the target goal and outcome from the starting baseline level.
-   - Available Daily Minutes (e.g. 45 min/day) is STRICTLY a pacing constraint for daily study sessions. It MUST NOT dictate, multiply, inflate, or shrink module or curriculum duration. NEVER use daily_minutes * fixed_days formulas.
-
-2. CURRICULUM DEPTH FIRST:
-   - Determine educational scope BEFORE estimating time. Reason about learner level, goal, desired outcome, prerequisite knowledge, core concepts, hands-on practice, mini-projects, and checkpoints.
-   - For beginner learners (e.g. Full-Stack Engineer), do NOT compress broad domains (HTML, CSS, JavaScript) into shallow 1-2 activity summaries. Decompose broad domains into granular, comprehensive learning units.
-   - Do NOT target any arbitrary module duration (e.g. 45, 90, 180, 240, 270 minutes). The duration must be an authentic OUTPUT of the curriculum depth.
-
-3. GRANULAR ACTIVITIES & REALISTIC ESTIMATES:
-   - Each activity must represent genuine learning work:
-     - "concept": 15 to 25 minutes
-     - "exercise": 20 to 30 minutes
-     - "project": 30 to 60+ minutes depending on scope
-     - "reflection" / "checkpoint": 10 to 20 minutes
-   - Do NOT create artificial activities to pad time. Do NOT compress substantial concepts into shallow activities to reduce count.
-
-4. MANDATORY DURATION DERIVATION:
-   - Every module's estimated duration will be calculated strictly as the exact sum of its constituent activity durations.
-
-5. EXACT CONCEPT COVERAGE & ALIGNMENT (STRICT RULE):
-   - Every major concept, tool, pattern, or framework mentioned in a module's title or description MUST be explicitly represented by at least one dedicated activity.
-   - DO NOT claim a topic or technology is covered in a module title/description if no activity actually teaches or practices it.
-   - DO NOT limit or cap the activity count per module to a fixed number. Generate as many granular activities as are legitimately required to cover every topic introduced in the module.`
-
-    const userPrompt = `Generate a personalized learning path for:
-Learner Goal: ${profile.learning_goal}
-Desired Outcome: ${profile.desired_outcome || "Mastery"}
-Current Level: ${profile.current_level}
-Available Daily Minutes (PACING CONSTRAINT ONLY): ${profile.available_daily_minutes || 45} min/day
-Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
-
-    let aiResponseText = ""
-
-    if (groqKey) {
-      try {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${groqKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            response_format: { type: "json_object" },
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt },
-            ],
-            temperature: 0.3,
-          }),
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          aiResponseText = data.choices?.[0]?.message?.content || ""
-        } else {
-          console.error("[generate-plan] Groq API returned non-200:", await response.text())
-        }
-      } catch (err) {
-        console.error("[generate-plan] Groq API fetch failed:", err)
-      }
-    } else if (openaiKey) {
-      try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${openaiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            response_format: { type: "json_object" },
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt },
-            ],
-            temperature: 0.3,
-          }),
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          aiResponseText = data.choices?.[0]?.message?.content || ""
-        } else {
-          console.error("[generate-plan] OpenAI API returned non-200:", await response.text())
-        }
-      } catch (err) {
-        console.error("[generate-plan] OpenAI API fetch failed:", err)
-      }
-    } else if (geminiKey) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-                },
-              ],
-              generationConfig: { responseMimeType: "application/json" },
-            }),
-          }
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
-        } else {
-          console.error("[generate-plan] Gemini API returned non-200:", await response.text())
-        }
-      } catch (err) {
-        console.error("[generate-plan] Gemini API fetch failed:", err)
-      }
-    }
-
-    // 5. Fallback Generator Integration if AI provider is unconfigured or failed
-    let parsed: AICurriculumOutput
-    if (aiResponseText) {
-      try {
-        parsed = JSON.parse(aiResponseText)
-      } catch (jsonErr) {
-        console.warn("[generate-plan] AI JSON parsing failed, falling back to deterministic generator:", jsonErr)
-        const fallbackPlan = generateLearningPlan(profile)
-        parsed = {
-          title: fallbackPlan.title,
-          goal_summary: fallbackPlan.goal_summary,
-          modules: fallbackPlan.modules,
-        }
-      }
-    } else {
-      console.log("[generate-plan] Using deterministic curriculum generator fallback")
-      const fallbackPlan = generateLearningPlan(profile)
-      parsed = {
-        title: fallbackPlan.title,
-        goal_summary: fallbackPlan.goal_summary,
-        modules: fallbackPlan.modules,
-      }
+    // 5. Generate Curriculum using Deterministic Recommendation Engine
+    console.log("[generate-plan] Using deterministic recommendation engine")
+    const fallbackPlan = generateLearningPlan(profile, assessmentResults || [], completedModuleIds)
+    const parsed: AICurriculumOutput = {
+      title: fallbackPlan.title,
+      goal_summary: fallbackPlan.goal_summary,
+      modules: fallbackPlan.modules,
     }
 
     if (!parsed.title || !parsed.goal_summary || !Array.isArray(parsed.modules) || parsed.modules.length === 0) {
@@ -375,7 +224,7 @@ Target Completion Horizon: ${profile.target_date || "Flexible pace"}`
         goal_summary: parsed.goal_summary.trim(),
         status: "active",
         generation_metadata: {
-          generator: aiResponseText ? "ai_server_v1" : "deterministic_v1",
+          generator: "deterministic_v1",
           generated_at: new Date().toISOString(),
           profile_goal: profile.learning_goal,
         },

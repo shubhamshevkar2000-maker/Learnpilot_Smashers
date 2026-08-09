@@ -451,7 +451,7 @@ function AICoachContent() {
         </header>
 
         {/* Chat Conversation Viewport */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12 space-y-6">
+        <main className="flex-1 overflow-y-auto w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           {/* Empty State */}
           {messages.length === 0 && (
             <div className="mx-auto max-w-2xl py-8 text-center space-y-6">

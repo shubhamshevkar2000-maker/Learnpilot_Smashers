@@ -31,6 +31,8 @@ export function generateAssessmentForModule(
     selectedDomain = "javascript"
   } else if (titleLower.includes("ai") || titleLower.includes("llm") || titleLower.includes("rag")) {
     selectedDomain = "ai"
+  } else if (titleLower.includes("python") || descLower.includes("python")) {
+    selectedDomain = "python"
   }
 
   // Pull questions for the domain

@@ -48,7 +48,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
+  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings", active: true },
 ]
 
@@ -196,9 +196,22 @@ function SettingsContent() {
       }
 
       if (data) {
+        // If critical learning parameters changed, archive the old curriculum plan to force a new one
+        const goalChanged = initialProfile?.learning_goal !== updates.learning_goal
+        const levelChanged = initialProfile?.current_level !== updates.current_level
+        
+        if (goalChanged || levelChanged) {
+          await supabase
+            .from("curriculum_plans")
+            .update({ is_active: false })
+            .eq("user_id", user.id)
+            .eq("is_active", true)
+        }
+
         setInitialProfile(data as LearnerProfile)
-        setSuccessMessage("Your learning preferences have been saved successfully!")
+        setSuccessMessage("Your learning preferences have been saved successfully! Your roadmap will adapt to these changes.")
         setTimeout(() => setSuccessMessage(null), 5000)
+        router.refresh()
       }
     } catch (err: any) {
       console.error("[Settings] Exception during save:", err)
@@ -299,7 +312,7 @@ function SettingsContent() {
       </aside>
 
       {/* RIGHT MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto px-4 py-8 md:px-10 lg:px-12">
+      <main className="flex-1 overflow-y-auto w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Header Bar */}
           <div className="flex items-center justify-between">

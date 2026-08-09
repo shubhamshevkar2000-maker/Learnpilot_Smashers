@@ -1,6 +1,6 @@
 import type { CurrentLevel, ActivityType } from "@/types/database.types"
 
-export type DomainId = "frontend" | "backend" | "fullstack" | "react" | "javascript" | "ai" | "generic"
+export type DomainId = "frontend" | "backend" | "fullstack" | "react" | "javascript" | "ai" | "python" | "generic"
 
 export interface ActivityTemplate {
   title: string
@@ -22,6 +22,8 @@ export interface ModuleTemplate {
   rationale: string
   targetLevels: CurrentLevel[]
   activities: ActivityTemplate[]
+  skillsTaught?: string[]
+  prerequisites?: string[]
 }
 
 export interface DomainProgression {
@@ -44,6 +46,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   // --- FRONTEND FOUNDATIONS ---
   "mod-html-css-basics": {
     id: "mod-html-css-basics",
+    skillsTaught: ["HTML","CSS","Flexbox","Responsive Design"],
+    prerequisites: [],
     domain: "frontend",
     skill: "HTML & CSS",
     title: "Web Fundamentals & Structural Syntax",
@@ -61,6 +65,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   },
   "mod-js-basics": {
     id: "mod-js-basics",
+    skillsTaught: ["JavaScript","Variables","Loops","Functions","Arrays"],
+    prerequisites: ["mod-html-css-basics"],
     domain: "javascript",
     skill: "JavaScript Core",
     title: "JavaScript Engine Mechanics & Core Syntax",
@@ -79,6 +85,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   // --- INTERMEDIATE JS & ASYNC ---
   "mod-js-async": {
     id: "mod-js-async",
+    skillsTaught: ["JavaScript","Promises","Async/Await","Fetch API","DOM"],
+    prerequisites: ["mod-js-basics"],
     domain: "javascript",
     skill: "JavaScript Async",
     title: "Asynchronous JavaScript & Network Requests",
@@ -95,6 +103,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   },
   "mod-js-advanced": {
     id: "mod-js-advanced",
+    skillsTaught: ["JavaScript","Closures","Prototypal Inheritance","Event Loop","ES6+"],
+    prerequisites: ["mod-js-async"],
     domain: "javascript",
     skill: "Advanced JavaScript",
     title: "Advanced JS: Prototypes, Modules & Performance",
@@ -112,6 +122,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   // --- REACT & NEXT.JS ---
   "mod-react-basics": {
     id: "mod-react-basics",
+    skillsTaught: ["React","Components","JSX","State","Props"],
+    prerequisites: ["mod-js-basics","mod-js-async"],
     domain: "react",
     skill: "React Core",
     title: "React Components & State Management",
@@ -128,6 +140,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   },
   "mod-react-advanced": {
     id: "mod-react-advanced",
+    skillsTaught: ["React","Hooks","Context API","Performance","Custom Hooks"],
+    prerequisites: ["mod-react-basics"],
     domain: "react",
     skill: "Advanced React",
     title: "Advanced React Patterns & Next.js Architecture",
@@ -146,6 +160,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   // --- BACKEND & DATABASES ---
   "mod-backend-basics": {
     id: "mod-backend-basics",
+    skillsTaught: ["Node.js","Express","REST APIs","Middleware"],
+    prerequisites: ["mod-js-async"],
     domain: "backend",
     skill: "Backend Core",
     title: "Backend Servers & RESTful APIs",
@@ -161,6 +177,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   },
   "mod-db-sql": {
     id: "mod-db-sql",
+    skillsTaught: ["SQL","PostgreSQL","Database Design","Queries"],
+    prerequisites: [],
     domain: "backend",
     skill: "Databases",
     title: "Relational Schemas & SQL Database Modeling",
@@ -176,6 +194,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   },
   "mod-backend-advanced": {
     id: "mod-backend-advanced",
+    skillsTaught: ["Node.js","Authentication","WebSockets","Microservices"],
+    prerequisites: ["mod-backend-basics","mod-db-sql"],
     domain: "backend",
     skill: "Backend Architecture",
     title: "Advanced API Architecture & Database Security",
@@ -193,6 +213,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   // --- PRODUCTION & ARCHITECTURE ---
   "mod-production": {
     id: "mod-production",
+    skillsTaught: ["Deployment","Docker","CI/CD","Testing"],
+    prerequisites: ["mod-react-advanced","mod-backend-advanced"],
     domain: "fullstack",
     skill: "DevOps & Production",
     title: "Production Deployment, CI/CD & Telemetry",
@@ -209,6 +231,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   // --- AI & LLMs ---
   "mod-ai-integration": {
     id: "mod-ai-integration",
+    skillsTaught: ["AI","OpenAI API","Prompt Engineering"],
+    prerequisites: ["mod-backend-basics"],
     domain: "ai",
     skill: "AI Engineering",
     title: "LLM Integration & Prompt Engineering",
@@ -224,6 +248,8 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
   },
   "mod-ai-rag": {
     id: "mod-ai-rag",
+    skillsTaught: ["AI","RAG","Vector Databases","Embeddings"],
+    prerequisites: ["mod-ai-integration"],
     domain: "ai",
     skill: "RAG & Vector DBs",
     title: "Retrieval-Augmented Generation (RAG)",
@@ -234,6 +260,122 @@ export const MODULE_REGISTRY: Record<string, ModuleTemplate> = {
       { title: "Text Embeddings & Semantic Vector Space", contentId: "auto-gen-34", activity_type: "concept", estimated_minutes: 25, learning_objective: "Understand multi-dimensional text representation.", is_architecture: true },
       { title: "Vector Database Setup & Similarity Search", contentId: "auto-gen-35", activity_type: "exercise", estimated_minutes: 35, learning_objective: "Store and query embedded document vectors." },
       { title: "RAG Pipeline Orchestration", contentId: "auto-gen-36", activity_type: "project", estimated_minutes: 50, learning_objective: "Build a document chat system using semantic retrieval.", is_production: true },
+    ]
+  },
+
+  // --- PYTHON ---
+  "mod-python-fundamentals": {
+    id: "mod-python-fundamentals",
+    skillsTaught: ["Python","Variables","Operators","Logic","Loops","Functions"],
+    prerequisites: [],
+    domain: "python",
+    skill: "Programming Fundamentals",
+    title: "Python Programming Fundamentals",
+    description: "Master basic Python programming including variables, data types, control flow, loops, and functions.",
+    rationale: "Provides the core foundation for all subsequent Python development.",
+    targetLevels: ["beginner", "basics", "unknown"],
+    activities: [
+      { title: "Python Variables and Data Types", contentId: "py-fund-1", activity_type: "concept", estimated_minutes: 20, learning_objective: "Understand basic Python data types and variable assignment." },
+      { title: "Operators and Expressions", contentId: "py-fund-2", activity_type: "exercise", estimated_minutes: 20, learning_objective: "Perform mathematical and logical operations." },
+      { title: "Conditional Logic", contentId: "py-fund-3", activity_type: "exercise", estimated_minutes: 20, learning_objective: "Implement if, elif, and else control flow structures." },
+      { title: "Loops and Iteration", contentId: "py-fund-4", activity_type: "exercise", estimated_minutes: 25, learning_objective: "Master for and while loops." },
+      { title: "Functions", contentId: "py-fund-5", activity_type: "concept", estimated_minutes: 25, learning_objective: "Define and invoke reusable functions." },
+      { title: "Python Practice Project", contentId: "py-fund-6", activity_type: "project", estimated_minutes: 40, learning_objective: "Combine basics into a coherent script." },
+    ]
+  },
+  "mod-python-data-structures": {
+    id: "mod-python-data-structures",
+    skillsTaught: ["Python","Lists","Tuples","Sets","Dictionaries","Comprehensions"],
+    prerequisites: ["mod-python-fundamentals"],
+    domain: "python",
+    skill: "Data Structures",
+    title: "Python Data Structures",
+    description: "Learn to store, access, and manipulate data efficiently using Python's built-in data structures.",
+    rationale: "Crucial for handling data effectively in software development.",
+    targetLevels: ["beginner", "intermediate", "unknown"],
+    activities: [
+      { title: "Lists and Tuples", contentId: "py-ds-1", activity_type: "concept", estimated_minutes: 20, learning_objective: "Understand mutable lists and immutable tuples." },
+      { title: "Sets", contentId: "py-ds-2", activity_type: "exercise", estimated_minutes: 20, learning_objective: "Work with unique collections." },
+      { title: "Dictionaries", contentId: "py-ds-3", activity_type: "exercise", estimated_minutes: 25, learning_objective: "Store and access key-value pairs." },
+      { title: "Comprehensions", contentId: "py-ds-4", activity_type: "concept", estimated_minutes: 25, learning_objective: "Generate collections concisely using comprehensions." },
+      { title: "Nested Data Structures", contentId: "py-ds-5", activity_type: "exercise", estimated_minutes: 25, learning_objective: "Handle complex, deeply nested JSON-like data." },
+      { title: "Data Processing Exercise", contentId: "py-ds-6", activity_type: "project", estimated_minutes: 40, learning_objective: "Process and transform real-world structured data." },
+    ]
+  },
+  "mod-python-oop": {
+    id: "mod-python-oop",
+    skillsTaught: ["Python","Classes","Objects","Inheritance","Composition"],
+    prerequisites: ["mod-python-data-structures"],
+    domain: "python",
+    skill: "Object-Oriented Programming",
+    title: "Object-Oriented Python",
+    description: "Design software using object-oriented principles, classes, methods, and inheritance in Python.",
+    rationale: "Essential for structuring and maintaining large applications.",
+    targetLevels: ["intermediate", "unknown"],
+    activities: [
+      { title: "Classes and Objects", contentId: "py-oop-new-1", activity_type: "concept", estimated_minutes: 25, learning_objective: "Understand the blueprint of objects and instantiation." },
+      { title: "__init__ and Instance State", contentId: "py-oop-new-2", activity_type: "exercise", estimated_minutes: 25, learning_objective: "Initialize object attributes correctly." },
+      { title: "Methods and Encapsulation", contentId: "py-oop-new-3", activity_type: "concept", estimated_minutes: 25, learning_objective: "Add behavior to objects and control access to state." },
+      { title: "Inheritance", contentId: "py-oop-new-4", activity_type: "exercise", estimated_minutes: 30, learning_objective: "Reuse code by inheriting from base classes." },
+      { title: "Composition", contentId: "py-oop-new-5", activity_type: "concept", estimated_minutes: 25, learning_objective: "Build complex objects by composing simpler ones." },
+      { title: "OOP Project", contentId: "py-oop-new-6", activity_type: "project", estimated_minutes: 45, learning_objective: "Design a fully object-oriented system from scratch." },
+    ]
+  },
+  "mod-python-testing": {
+    id: "mod-python-testing",
+    skillsTaught: ["Python","Exceptions","Debugging","Unit Testing","Pytest"],
+    prerequisites: ["mod-python-fundamentals"],
+    domain: "python",
+    skill: "Testing and Debugging",
+    title: "Python Errors, Testing & Debugging",
+    description: "Make your code robust by handling exceptions properly and writing unit tests.",
+    rationale: "Critical for production-ready engineering and maintaining code quality over time.",
+    targetLevels: ["intermediate", "advanced", "unknown"],
+    activities: [
+      { title: "Exceptions", contentId: "py-test-1", activity_type: "concept", estimated_minutes: 20, learning_objective: "Catch and handle runtime errors safely." },
+      { title: "Custom Exceptions", contentId: "py-test-2", activity_type: "exercise", estimated_minutes: 20, learning_objective: "Define domain-specific error classes." },
+      { title: "Debugging", contentId: "py-test-3", activity_type: "concept", estimated_minutes: 25, learning_objective: "Use debugging tools to inspect program state." },
+      { title: "Assertions", contentId: "py-test-4", activity_type: "exercise", estimated_minutes: 20, learning_objective: "Validate internal state assumptions using assert." },
+      { title: "Unit Testing", contentId: "py-test-5", activity_type: "concept", estimated_minutes: 30, learning_objective: "Write test suites using the unittest or pytest framework." },
+      { title: "Testing Exercise", contentId: "py-test-6", activity_type: "project", estimated_minutes: 40, learning_objective: "Implement a full test suite for a provided application module." },
+    ]
+  },
+  "mod-python-advanced": {
+    id: "mod-python-advanced-new",
+    skillsTaught: ["Python","Iterators","Generators","Decorators","Context Managers","Type Hints"],
+    prerequisites: ["mod-python-oop"],
+    domain: "python",
+    skill: "Advanced Python Features",
+    title: "Advanced Python Programming",
+    description: "Unlock the full power of Python with advanced features like generators, decorators, and type hinting.",
+    rationale: "Separates intermediate users from professional Python engineers.",
+    targetLevels: ["advanced"],
+    activities: [
+      { title: "Iterators", contentId: "py-adv-new-1", activity_type: "concept", estimated_minutes: 20, learning_objective: "Understand the iterator protocol." },
+      { title: "Generators", contentId: "py-adv-new-2", activity_type: "exercise", estimated_minutes: 25, learning_objective: "Create lazy sequences using the yield keyword." },
+      { title: "Decorators", contentId: "py-adv-new-3", activity_type: "exercise", estimated_minutes: 30, learning_objective: "Modify function behavior dynamically with decorators." },
+      { title: "Context Managers", contentId: "py-adv-new-4", activity_type: "concept", estimated_minutes: 25, learning_objective: "Manage resources safely using the with statement." },
+      { title: "Type Hints", contentId: "py-adv-new-5", activity_type: "concept", estimated_minutes: 25, learning_objective: "Add static typing to Python for better tooling and safety." },
+      { title: "Advanced Python Project", contentId: "py-adv-new-6", activity_type: "project", estimated_minutes: 45, learning_objective: "Build a highly optimized script utilizing advanced language features." },
+    ]
+  },
+  "mod-python-apis": {
+    id: "mod-python-apis",
+    skillsTaught: ["Python","JSON","File Handling","HTTP requests","APIs","Environment Variables"],
+    prerequisites: ["mod-python-data-structures"],
+    domain: "python",
+    skill: "Application Development",
+    title: "Python APIs & Application Development",
+    description: "Connect Python to the outside world by reading files, parsing JSON, and making HTTP requests.",
+    rationale: "Modern applications rely heavily on external APIs and filesystem interaction.",
+    targetLevels: ["intermediate", "advanced"],
+    activities: [
+      { title: "JSON", contentId: "py-api-1", activity_type: "concept", estimated_minutes: 20, learning_objective: "Parse and generate JSON data formats." },
+      { title: "File Handling", contentId: "py-api-2", activity_type: "exercise", estimated_minutes: 20, learning_objective: "Read from and write to text files safely." },
+      { title: "pathlib", contentId: "py-api-3", activity_type: "concept", estimated_minutes: 20, learning_objective: "Navigate cross-platform file paths objectively." },
+      { title: "HTTP/API Requests", contentId: "py-api-4", activity_type: "exercise", estimated_minutes: 30, learning_objective: "Use the requests library to interact with REST APIs." },
+      { title: "Environment Variables", contentId: "py-api-5", activity_type: "concept", estimated_minutes: 20, learning_objective: "Store sensitive configuration outside of source code." },
+      { title: "Practical API Project", contentId: "py-api-6", activity_type: "project", estimated_minutes: 45, learning_objective: "Build a CLI tool that consumes an external weather or finance API." },
     ]
   },
 
@@ -339,6 +481,15 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
       beginner: ["mod-js-basics", "mod-ai-integration", "mod-ai-rag"],
       intermediate: ["mod-ai-integration", "mod-ai-rag"],
       advanced: ["mod-ai-integration", "mod-ai-rag"]
+    }
+  },
+  {
+    id: "python",
+    aliases: ["python", "python developer", "python development", "data scientist", "data science", "data analysis", "machine learning engineer", "ml engineer", "ai engineer"],
+    progression: {
+      beginner: ["mod-python-fundamentals", "mod-python-data-structures"],
+      intermediate: ["mod-python-oop", "mod-python-testing", "mod-python-apis"],
+      advanced: ["mod-python-advanced-new"]
     }
   },
   {

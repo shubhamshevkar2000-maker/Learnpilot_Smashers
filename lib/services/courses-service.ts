@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database.types"
 import { CONTENT_REGISTRY } from "../generator/content-registry"
 import type { ActiveCurriculum } from "./curriculum-service"
+import type { RecommendationReason, RecommendedModule } from "../generator/recommendation-engine"
 
 export type CourseDifficulty = "Beginner" | "Intermediate" | "Advanced"
 export type CourseLessonType = "concept" | "exercise" | "project" | "reflection"
@@ -33,6 +34,8 @@ export interface Course {
   difficulty: "Beginner" | "Intermediate" | "Advanced"
   estimated_minutes: number
   lessons: CourseLesson[]
+  recommendationReason?: RecommendationReason
+  isLocked?: boolean
 }
 
 export interface UserCourseProgress {
@@ -41,6 +44,45 @@ export interface UserCourseProgress {
   total_lessons: number
   completed_lessons: number
   progress_percentage: number
+}
+
+export function getCatalogCourses(recommendations: RecommendedModule[]): Course[] {
+  return recommendations.map(rec => {
+    const mod = rec.module;
+    const lessons: CourseLesson[] = mod.activities.map((act, index) => {
+      const content = act.contentId ? CONTENT_REGISTRY[act.contentId] : null;
+      return {
+        id: `virtual-${mod.id}-${index}`,
+        course_id: mod.id,
+        title: act.title,
+        activity_type: (act.activity_type as CourseLessonType) || "concept",
+        sequence_order: index + 1,
+        estimated_minutes: act.estimated_minutes || 20,
+        is_completed: false, // UI must merge with real progress if needed
+        objective: content?.objective || `Complete the ${act.title} activity.`,
+        concept_guide: content?.concept_guide || `This activity requires active learning on the topic: ${act.title}.`,
+        code_example: content?.code_example,
+        code_explanation: content ? "" : undefined,
+        practical_exercise: content?.practical_exercise || "Apply what you have learned.",
+        checkpoint_question: content?.checkpoint_question || "Did you understand this topic?",
+        checkpoint_options: content?.checkpoint_options || ["Yes", "No"],
+        checkpoint_correct_index: content?.checkpoint_correct_index || 0,
+        checkpoint_explanation: content?.checkpoint_explanation || "Great job!",
+        is_content_missing: !content
+      }
+    });
+
+    return {
+      id: mod.id,
+      title: mod.title,
+      description: mod.description,
+      difficulty: "Beginner",
+      estimated_minutes: lessons.reduce((sum, l) => sum + (l.estimated_minutes || 0), 0),
+      lessons,
+      recommendationReason: rec.reason,
+      isLocked: rec.isLocked
+    }
+  });
 }
 
 /**
@@ -101,6 +143,12 @@ export async function completeCourseLesson(
 ): Promise<boolean> {
   if (!userId || !lessonId) return false
   
+  // Prevent invalid UUID syntax error in Supabase for preview/catalog courses
+  if (lessonId.startsWith("virtual-")) {
+    console.log("Mocking completion for virtual preview lesson:", lessonId)
+    return true
+  }
+
   const { error } = await supabase
     .from("module_activities")
     .update({
