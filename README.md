@@ -5,7 +5,7 @@
 **AI-powered personalized learning for every learner**
 
 [📄 Solution Document](https://drive.google.com/file/d/1OPannhyR72xPYWoI-Rp0jm9aZC5rCGG9/view?usp=drive_link) ·
-ppt = https://drive.google.com/file/d/1BYXckDo7lc0fKKO55iY1m-Puo9UoKwc9/view?usp=drive_link
+[ppt]=https://drive.google.com/file/d/1BYXckDo7lc0fKKO55iY1m-Puo9UoKwc9/view?usp=drive_link
  [🖥️ Live Demo](http://localhost:3000) ·
   [🎥 Demo Video](https://drive.google.com/file/d/1xyisEOYtatN1SO5CDxd2nSJ_p6TV9xTW/view?usp=drive_link)
 
