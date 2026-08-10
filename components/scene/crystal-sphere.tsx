@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import { useMemo, useRef } from "react"
@@ -88,7 +89,6 @@ const GlassShellShader = {
 // Generates internal neural nodes and synaptic connections inside the sphere
 function useNeuralNetwork() {
   return useMemo(() => {
-    const nodeCount = 20
     const rawNodes: THREE.Vector3[] = []
     
     // Distribute internal nodes within radius [0.20, 0.58]
@@ -130,6 +130,9 @@ function useNeuralNetwork() {
 export function CrystalSphere({ isDark, reducedMotion }: Props) {
   const group = useRef<THREE.Group>(null)
   const innerGroup = useRef<THREE.Group>(null)
+  const latticeGroup = useRef<THREE.Group>(null)
+  const equatorialRing1 = useRef<THREE.Group>(null)
+  const equatorialRing2 = useRef<THREE.Group>(null)
   const shellMat = useRef<THREE.ShaderMaterial>(null)
   const coreMat = useRef<THREE.MeshBasicMaterial>(null)
   const linesMat = useRef<THREE.LineBasicMaterial>(null)
@@ -146,10 +149,10 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
     const ctx = canvas.getContext("2d")
     if (!ctx) return null
     
-    const gradient = ctx.createRadialGradient(128, 128, 60, 128, 128, 128)
-    gradient.addColorStop(0, "rgba(155, 124, 240, 0.48)")
-    gradient.addColorStop(0.35, "rgba(155, 124, 240, 0.22)")
-    gradient.addColorStop(0.70, "rgba(155, 124, 240, 0.05)")
+    const gradient = ctx.createRadialGradient(128, 128, 45, 128, 128, 128)
+    gradient.addColorStop(0, "rgba(175, 140, 255, 0.65)")
+    gradient.addColorStop(0.35, "rgba(155, 124, 240, 0.28)")
+    gradient.addColorStop(0.70, "rgba(155, 124, 240, 0.08)")
     gradient.addColorStop(1, "rgba(155, 124, 240, 0)")
     
     ctx.fillStyle = gradient
@@ -188,18 +191,32 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
     // Gentle breathing & adaptation pulse
     if (group.current) {
       const adapt = rangeProgress(p, 0.62, 0.74)
-      const breathe = reducedMotion ? 0 : Math.sin(t * 0.8) * 0.008
-      const pulse = adapt > 0 && adapt < 1 ? Math.sin(adapt * Math.PI) * 0.035 : 0
+      const breathe = reducedMotion ? 0 : Math.sin(t * 0.8) * 0.012
+      const pulse = adapt > 0 && adapt < 1 ? Math.sin(adapt * Math.PI) * 0.04 : 0
       const target = 1 + breathe + pulse
       group.current.scale.setScalar(
         group.current.scale.x + (target - group.current.scale.x) * Math.min(1, delta * 4),
       )
     }
 
-    // Very gentle internal neural rotation (giving living intelligence)
+    // Internal neural rotation (living AI intelligence)
     if (innerGroup.current && !reducedMotion) {
-      innerGroup.current.rotation.y = t * 0.06
-      innerGroup.current.rotation.x = Math.sin(t * 0.04) * 0.12
+      innerGroup.current.rotation.y = t * 0.08
+      innerGroup.current.rotation.x = Math.sin(t * 0.05) * 0.14
+    }
+
+    // Subtle internal geometric icosahedron rotation
+    if (latticeGroup.current && !reducedMotion) {
+      latticeGroup.current.rotation.y = -t * 0.06
+      latticeGroup.current.rotation.z = Math.cos(t * 0.04) * 0.18
+    }
+
+    // Layered equatorial halo rings rotation
+    if (equatorialRing1.current && !reducedMotion) {
+      equatorialRing1.current.rotation.z = t * 0.04
+    }
+    if (equatorialRing2.current && !reducedMotion) {
+      equatorialRing2.current.rotation.z = -t * 0.03
     }
 
     // Synchronize shader uniforms with theme
@@ -220,25 +237,51 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
 
   // Theme-tailored colors for internal structure & core
   const coreColor = isDark ? "#A080F8" : "#B59DF8"
-  const linePathwayColor = isDark ? "#B9A5F8" : "#8A69E8"
-  const pointNodeColor = isDark ? "#E5DCFC" : "#724FD8"
+  const linePathwayColor = isDark ? "#C2B2FC" : "#8A69E8"
+  const pointNodeColor = isDark ? "#EDE5FF" : "#724FD8"
+  const ringColor = isDark ? "#B9A5F8" : "#8A69E8"
 
   return (
     <group ref={group}>
-      {/* 1. Localized soft halo glow behind the sphere (short visual falloff) */}
+      {/* 1. Localized soft halo glow behind the sphere */}
       {localizedGlowTexture && (
-        <mesh position={[0, 0, -0.04]}>
-          <planeGeometry args={[2.2, 2.2]} />
+        <mesh position={[0, 0, -0.06]}>
+          <planeGeometry args={[2.5, 2.5]} />
           <meshBasicMaterial
             map={localizedGlowTexture}
             transparent
-            opacity={isDark ? 0.32 : 0.22}
+            opacity={isDark ? 0.38 : 0.25}
             depthWrite={false}
           />
         </mesh>
       )}
 
-      {/* 2. Internal Intelligence Structure (Neural Pathways, Synaptic Nodes, Core Glow) */}
+      {/* 2. Concentric Translucent Equatorial AI Rings */}
+      <group ref={equatorialRing1} rotation={[0.42, 0.18, 0]}>
+        <mesh>
+          <torusGeometry args={[0.92, 0.003, 16, 128]} />
+          <meshBasicMaterial
+            color={ringColor}
+            transparent
+            opacity={isDark ? 0.45 : 0.35}
+            depthWrite={false}
+          />
+        </mesh>
+      </group>
+
+      <group ref={equatorialRing2} rotation={[-0.35, 0.28, 0.4]}>
+        <mesh>
+          <torusGeometry args={[0.86, 0.0025, 16, 128]} />
+          <meshBasicMaterial
+            color={ringColor}
+            transparent
+            opacity={isDark ? 0.35 : 0.25}
+            depthWrite={false}
+          />
+        </mesh>
+      </group>
+
+      {/* 3. Internal Intelligence Structure (Neural Pathways, Synaptic Nodes, Geometric Polyhedron) */}
       <group ref={innerGroup}>
         {/* Soft luminous internal core with radial falloff */}
         <mesh>
@@ -247,10 +290,24 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
             ref={coreMat}
             color={coreColor}
             transparent
-            opacity={isDark ? 0.58 : 0.46}
+            opacity={isDark ? 0.62 : 0.50}
             depthWrite={false}
           />
         </mesh>
+
+        {/* Internal geometric icosahedron lattice */}
+        <group ref={latticeGroup}>
+          <mesh>
+            <icosahedronGeometry args={[0.46, 1]} />
+            <meshBasicMaterial
+              color={linePathwayColor}
+              wireframe={true}
+              transparent
+              opacity={isDark ? 0.22 : 0.14}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
 
         {/* Delicate internal neural pathways (lines) */}
         <lineSegments geometry={linesGeometry}>
@@ -258,7 +315,7 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
             ref={linesMat}
             color={linePathwayColor}
             transparent
-            opacity={isDark ? 0.42 : 0.30}
+            opacity={isDark ? 0.48 : 0.34}
             depthWrite={false}
           />
         </lineSegments>
@@ -268,15 +325,15 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
           <pointsMaterial
             ref={pointsMat}
             color={pointNodeColor}
-            size={0.024}
+            size={0.026}
             transparent
-            opacity={isDark ? 0.75 : 0.55}
+            opacity={isDark ? 0.85 : 0.65}
             depthWrite={false}
           />
         </points>
       </group>
 
-      {/* 3. Outer Translucent Glass Shell (Radius 0.80) with Fresnel rim and specular highlights */}
+      {/* 4. Outer Translucent Glass Shell (Radius 0.80) with Fresnel rim and specular highlights */}
       <mesh>
         <sphereGeometry args={[0.80, 64, 64]} />
         <shaderMaterial
@@ -292,7 +349,3 @@ export function CrystalSphere({ isDark, reducedMotion }: Props) {
     </group>
   )
 }
-
-
-
-

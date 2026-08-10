@@ -21,7 +21,8 @@ import {
   ArrowRight,
   Clock,
   Activity,
-  Award
+  Award,
+  Calendar,
 } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { ProtectedRoute } from "@/components/auth/protected-route"
@@ -39,6 +40,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
+  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
   { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
   { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },

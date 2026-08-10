@@ -7,6 +7,8 @@ import {
   CheckCircle,
   XCircle,
   ArrowRight,
+  ArrowLeft,
+  RotateCcw,
   TrendingUp,
   BarChart2
 } from "lucide-react"
@@ -286,14 +288,30 @@ function AssessmentResultContent({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
 
-        <div className="pt-4 flex justify-center">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link 
             href="/assessments"
-            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-8 py-3 text-sm font-medium text-background shadow-sm transition-opacity hover:opacity-90"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-border/80 bg-card px-6 py-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted/80"
           >
-            <span>Return to Validation List</span>
-            <ArrowRight size={16} />
+            <ArrowLeft size={16} />
+            <span>Back to Assessments</span>
           </Link>
+          <Link 
+            href={`/assessments/${resolvedParams.id}`}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-6 py-3 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/20"
+          >
+            <RotateCcw size={16} />
+            <span>Retake Assessment</span>
+          </Link>
+          {passed && (
+            <Link 
+              href="/assessments"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+            >
+              <span>Next Assessment</span>
+              <ArrowRight size={16} />
+            </Link>
+          )}
         </div>
       </div>
     </div>

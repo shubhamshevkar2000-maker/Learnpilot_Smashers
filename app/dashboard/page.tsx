@@ -58,7 +58,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
   { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
   { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "#" },
+  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ]
 

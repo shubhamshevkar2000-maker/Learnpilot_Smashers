@@ -192,12 +192,14 @@ function AssessmentTakingContent({ params }: { params: Promise<{ id: string }> }
             ${tc.input.includes('return') ? tc.input : `return ${tc.input};`}
           `)
           
-          const result = runFn(win.useState, win.React)
+          const cleanOutput = String(result).replace(/^['"]|['"]$/g, '').trim()
+          const cleanExpected = String(tc.expected).replace(/^['"]|['"]$/g, '').trim()
+          const isPassed = String(result) === tc.expected || cleanOutput === cleanExpected || JSON.stringify(result) === tc.expected
           results.push({
             input: tc.input,
             expected: tc.expected,
-            output: String(result),
-            passed: String(result) === tc.expected
+            output: typeof result === 'object' ? JSON.stringify(result) : String(result),
+            passed: isPassed
           })
         } catch (err: any) {
           results.push({
@@ -333,7 +335,9 @@ function AssessmentTakingContent({ params }: { params: Promise<{ id: string }> }
     if (currentQuestion.questionType === "short_answer") {
       const text = answers[currentQuestion.id]
       const checks = answers[`${currentQuestion.id}_checks`] || []
-      return text?.trim().length > 0 && checks.length > 0
+      const hasText = (text?.trim().length || 0) > 0
+      const hasChecks = !currentQuestion.selfReviewCriteria || currentQuestion.selfReviewCriteria.length === 0 || checks.length > 0
+      return hasText && hasChecks
     }
     if (currentQuestion.questionType === "code_write") {
       return answers[`${currentQuestion.id}_passed`] !== undefined
@@ -426,12 +430,17 @@ function AssessmentTakingContent({ params }: { params: Promise<{ id: string }> }
                       {currentQuestion.selfReviewCriteria.map((criterion, idx) => {
                         const isChecked = (answers[`${currentQuestion.id}_checks`] || []).includes(idx)
                         return (
-                          <label key={idx} className="flex items-start gap-3 cursor-pointer group">
+                          <button
+                            type="button"
+                            key={idx}
+                            onClick={() => handleSelfReviewCheck(idx)}
+                            className="w-full flex items-start gap-3 cursor-pointer group text-left transition-colors"
+                          >
                             <div className={`mt-0.5 shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-amber-500 border-amber-500' : 'border-border/60 group-hover:border-amber-400'}`}>
                               {isChecked && <CheckCircle size={12} className="text-white" />}
                             </div>
-                            <span className={`text-sm ${isChecked ? 'text-foreground' : 'text-muted-foreground'}`}>{criterion}</span>
-                          </label>
+                            <span className={`text-sm ${isChecked ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{criterion}</span>
+                          </button>
                         )
                       })}
                     </div>
