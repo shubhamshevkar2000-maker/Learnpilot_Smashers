@@ -31,34 +31,46 @@ export interface ActiveCurriculum {
 }
 
 export function generateSchedule(
-  profile: LearnerProfile,
+  profile: LearnerProfile | null | undefined,
   modules: ModuleWithActivities[]
 ): ScheduledPath {
-  const dailyCommitment = profile.available_daily_minutes ? Math.max(profile.available_daily_minutes, 15) : 30
+  const rawDaily = profile?.available_daily_minutes
+  const parsedDaily = typeof rawDaily === "number" ? rawDaily : Number(rawDaily)
+  const dailyCommitment = !isNaN(parsedDaily) && parsedDaily > 0 ? Math.max(parsedDaily, 15) : 30
   
   let targetDays = 0
-  if (profile.target_date) {
+  if (profile?.target_date) {
     const target = new Date(profile.target_date)
     const now = new Date()
-    targetDays = Math.max(1, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    const targetTime = target.getTime()
+    const nowTime = now.getTime()
+    if (!isNaN(targetTime) && !isNaN(nowTime) && targetTime > nowTime) {
+      targetDays = Math.max(1, Math.ceil((targetTime - nowTime) / (1000 * 60 * 60 * 24)))
+    }
   }
 
   const allActivities: ScheduledActivity[] = []
-  modules.forEach(m => {
-    (m.activities || []).forEach(a => {
-      allActivities.push({
-        ...a,
-        module_title: m.title
-      })
+  if (Array.isArray(modules)) {
+    modules.forEach((m) => {
+      if (Array.isArray(m?.activities)) {
+        m.activities.forEach((a) => {
+          allActivities.push({
+            ...a,
+            module_title: m.title || "Module",
+          })
+        })
+      }
     })
-  })
+  }
 
   const days: ScheduledDay[] = []
   let currentDay: ScheduledDay = { dayNumber: 1, totalMinutes: 0, activities: [] }
   let totalMinutes = 0
 
-  allActivities.forEach(act => {
-    const est = act.estimated_minutes || 20
+  allActivities.forEach((act) => {
+    const rawMins = act.estimated_minutes
+    const parsedMins = typeof rawMins === "number" ? rawMins : (typeof rawMins === "string" ? parseInt(rawMins, 10) : 20)
+    const est = !isNaN(parsedMins) && parsedMins > 0 ? parsedMins : 20
     totalMinutes += est
 
     if (currentDay.totalMinutes + est > dailyCommitment && currentDay.activities.length > 0) {
@@ -78,10 +90,10 @@ export function generateSchedule(
 
   return {
     days,
-    totalMinutes,
-    targetDays: targetDays > 0 ? targetDays : days.length,
+    totalMinutes: isNaN(totalMinutes) ? 0 : totalMinutes,
+    targetDays: targetDays > 0 ? targetDays : (days.length > 0 ? days.length : 1),
     dailyCommitment,
-    isOverloaded
+    isOverloaded,
   }
 }
 
@@ -158,10 +170,25 @@ export async function getActiveCurriculumFoundation(
     }
   }
 
-  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => ({
-    ...mod,
-    activities: activityMap.get(mod.id) || [],
-  }))
+  const modulesWithActivities: ModuleWithActivities[] = moduleList.map((mod) => {
+    const modActs = activityMap.get(mod.id) || []
+    // Ensure module's estimated_minutes reflects the exact sum of activity durations if activities exist
+    const sumMins = modActs.reduce((acc, a) => {
+      const raw = a.estimated_minutes
+      const parsed = typeof raw === "number" ? raw : (typeof raw === "string" ? parseInt(raw, 10) : 20)
+      return acc + (!isNaN(parsed) && parsed > 0 ? parsed : 20)
+    }, 0)
+
+    const rawModMins = mod.estimated_minutes
+    const parsedModMins = typeof rawModMins === "number" ? rawModMins : (typeof rawModMins === "string" ? parseInt(rawModMins, 10) : 30)
+    const estimated_minutes = modActs.length > 0 ? sumMins : (!isNaN(parsedModMins) && parsedModMins > 0 ? parsedModMins : 30)
+
+    return {
+      ...mod,
+      estimated_minutes,
+      activities: modActs,
+    }
+  })
 
   return {
     plan: existingPlan as LearningPlan,
