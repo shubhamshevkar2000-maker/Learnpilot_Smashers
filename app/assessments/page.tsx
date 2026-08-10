@@ -33,28 +33,9 @@ import type { Database } from "@/types/database.types"
 import type { StaticAssessment } from "@/types/assessment"
 import { getOrCreateActiveCurriculum } from "@/lib/services/curriculum-service"
 import { generateAssessmentForModule } from "@/lib/generator/assessment-generator"
+import { AppShell } from "@/components/layout/app-shell"
 
 type LearnerProfile = Database["public"]["Tables"]["learner_profiles"]["Row"]
-
-interface NavItem {
-  id: string
-  label: string
-  icon: typeof Compass
-  href: string
-  active?: boolean
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
-  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
-  { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
-  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments", active: true },
-  { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
-]
 
 export default function AssessmentsPage() {
   return (
@@ -66,58 +47,53 @@ export default function AssessmentsPage() {
 
 function AssessmentsContent() {
   const router = useRouter()
-  const { user, isConfigured, signOut } = useAuth()
+  const { user, isConfigured } = useAuth()
   const supabase = createClient()
 
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [profile, setProfile] = useState<LearnerProfile | null>(null)
   const [activeAssessment, setActiveAssessment] = useState<StaticAssessment | null>(null)
   const [upcomingAssessments, setUpcomingAssessments] = useState<StaticAssessment[]>([])
   const [completedAssessments, setCompletedAssessments] = useState<StaticAssessment[]>([])
-  const [attempts, setAttempts] = useState<any[]>([])
+  const [pastAttempts, setPastAttempts] = useState<any[]>([])
   const [activeToast, setActiveToast] = useState<string | null>(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
-    if (!isConfigured || !user) {
-      setLoading(false)
+    if (!user) return
+    if (!isConfigured) {
+      router.replace("/login")
       return
     }
 
     try {
       setLoading(true)
-      setErrorMessage(null)
 
-      // Fetch profile
-      const { data: profData, error: profError } = await supabase
+      const { data: profData, error: profErr } = await supabase
         .from("learner_profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle()
 
-      if (profError || !profData || !profData.onboarding_completed) {
+      if (profErr) throw profErr
+      if (!profData || !profData.onboarding_completed) {
         router.replace("/onboarding")
         return
       }
 
       setProfile(profData as LearnerProfile)
-
-      // Fetch dynamic active curriculum
       const curriculum = await getOrCreateActiveCurriculum(supabase, user.id)
 
-      // Fetch historical attempts
-      const { data: results, error: resultsError } = await supabase
-        .from("assessment_results")
+      const { data: attempts, error: attErr } = await supabase
+        .from("assessment_attempts")
         .select("*")
         .eq("user_id", user.id)
-        .order("attempted_at", { ascending: false })
+        .order("created_at", { ascending: false })
 
-      if (resultsError) throw resultsError
-      const attemptList = results || []
-      setAttempts(attemptList)
+      if (attErr) throw attErr
+      const attemptList = attempts || []
+      setPastAttempts(attemptList)
 
-      // Identify passed/completed module IDs
       const completedModuleIds = new Set(
         attemptList
           .filter(a => a.passed)
@@ -156,27 +132,11 @@ function AssessmentsContent() {
     loadData()
   }, [loadData])
 
-  const handleNavClick = (item: NavItem) => {
-    if (item.href !== "#") {
-      router.push(item.href)
-      return
-    }
-    setActiveToast(`${item.label} will be available in the upcoming phase.`)
-    setTimeout(() => {
-      setActiveToast(null)
-    }, 2800)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.replace("/login")
-  }
-
   if (loading || !profile) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background text-foreground">
+      <div className="flex min-h-screen bg-background items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
           <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
             Loading Validations...
           </p>
@@ -185,109 +145,15 @@ function AssessmentsContent() {
     )
   }
 
-  const displayName = profile.display_name || user?.user_metadata?.full_name || "Learner"
-  const avatarInitial = displayName.charAt(0).toUpperCase() || "L"
-
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300">
+    <AppShell maxWidth="1280px">
       {activeToast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-sm backdrop-blur-md">
           <span>{activeToast}</span>
         </div>
       )}
 
-      {mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div>
-          <div className="flex items-center justify-between pb-5">
-            <Link
-              href="/"
-              className="text-[11px] font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
-            >
-              LEARNPILOT
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground lg:hidden"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <nav className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
-                    item.active
-                      ? "font-medium text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
-                >
-                  <Icon size={14} className={item.active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        <div className="space-y-3 pt-4 border-t border-border/40">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] text-muted-foreground">Theme</span>
-            <ThemeToggle />
-          </div>
-
-          <div className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-card/60 p-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary">
-              {avatarInitial}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-foreground">
-                {displayName}
-              </p>
-              <p className="truncate text-[10px] capitalize text-muted-foreground">
-                {profile.current_level || "Learner"}
-              </p>
-            </div>
-            <button
-              onClick={handleSignOut}
-              title="Sign out"
-              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <LogOut size={13} />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      <main className="flex-1 overflow-y-auto w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <div className="max-w-4xl space-y-6">
-          <div className="flex items-center justify-between pb-2 border-b border-border/40 lg:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-foreground hover:bg-muted"
-            >
-              <Menu size={18} />
-            </button>
-            <span className="text-[11px] font-semibold tracking-[0.25em] text-foreground">
-              LEARNPILOT
-            </span>
-            <div className="w-10" />
-          </div>
+      <div className="max-w-4xl space-y-6">
 
           <header className="space-y-1">
             <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
@@ -425,8 +291,8 @@ function AssessmentsContent() {
                   </span>
                   <div className="space-y-3">
                     {completedAssessments.map((a) => {
-                      const latestAttempt = attempts.find(
-                        att => att.module_id === a.id || att.assessment_title === a.id
+                      const latestAttempt = pastAttempts.find(
+                        (att: any) => att.module_id === a.id || att.assessment_title === a.id
                       )
                       return (
                         <div
@@ -470,17 +336,17 @@ function AssessmentsContent() {
                   <History size={13} /> Recent Attempts
                 </span>
                 <span className="text-[11px] text-muted-foreground font-mono">
-                  {attempts.length} total
+                  {pastAttempts.length} total
                 </span>
               </div>
 
-              {attempts.length === 0 ? (
+              {pastAttempts.length === 0 ? (
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   No assessments attempted yet. Start your first active validation to track your score history.
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {attempts.map((attempt) => {
+                  {pastAttempts.map((attempt: any) => {
                     const allAssessments = [
                       ...(activeAssessment ? [activeAssessment] : []),
                       ...upcomingAssessments,
@@ -532,7 +398,6 @@ function AssessmentsContent() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AppShell>
   )
 }

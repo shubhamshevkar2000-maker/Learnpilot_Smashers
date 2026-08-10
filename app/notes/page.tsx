@@ -51,40 +51,7 @@ import {
   FolderTree,
   ChevronRight,
 } from "lucide-react"
-import { useAuth } from "@/components/auth/auth-provider"
-import { ProtectedRoute } from "@/components/auth/protected-route"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { createClient } from "@/lib/supabase/client"
-import {
-  fetchUserNotes,
-  createNote,
-  updateNote,
-  deleteNote,
-  filterAndSortNotes,
-  compressImageFile,
-  type LearnerNote,
-  type NoteSourceType,
-} from "@/lib/services/notes-service"
-
-interface NavItem {
-  id: string
-  label: string
-  icon: any
-  href: string
-  active?: boolean
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
-  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
-  { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
-  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
-  { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes", active: true },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
-]
+import { AppShell } from "@/components/layout/app-shell"
 
 export default function NotesPage() {
   return (
@@ -558,12 +525,11 @@ function NotesContent() {
       groupedJourneyNotes[dayNum][moduleName].push(n)
     })
   }
-
   const displayName = user?.user_metadata?.full_name || "Learner"
   const avatarInitial = displayName.charAt(0).toUpperCase() || "L"
 
   return (
-    <div className="flex h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300 overflow-hidden">
+    <AppShell maxWidth="full" noPadding fullHeight>
       {/* Toast Notification */}
       {activeToast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-md backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
@@ -635,82 +601,8 @@ function NotesContent() {
         </div>
       )}
 
-      {/* Mobile Backdrop */}
-      {mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
-        />
-      )}
-
-      {/* Sidebar Navigation */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div>
-          <div className="flex items-center justify-between pb-5">
-            <Link
-              href="/"
-              className="text-[11px] font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
-            >
-              LEARNPILOT
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground lg:hidden"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <nav className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
-                    item.active
-                      ? "font-medium text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
-                >
-                  <Icon size={14} className={item.active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        <div className="space-y-2.5 pt-3 border-t border-border/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">
-                {avatarInitial}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
-          >
-            <LogOut size={12} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
-
       {/* Main Workspace Layout */}
-      <main className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         {/* Top Header */}
         <header className="shrink-0 flex items-center justify-between px-6 py-3.5 border-b border-border/40 bg-card/30">
           <div className="flex items-center gap-3">
@@ -1501,8 +1393,8 @@ function NotesContent() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }
 

@@ -32,6 +32,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { createClient } from "@/lib/supabase/client"
 import { getActiveCurriculumFoundation, getOrCreateActiveCurriculum, type ActiveCurriculum } from "@/lib/services/curriculum-service"
 import type { LearnerProfile, CurrentLevel, ModuleActivity } from "@/types/database.types"
+import { AppShell } from "@/components/layout/app-shell"
+import { PageHeader } from "@/components/layout/page-header"
 
 // Readable levels mapping
 const LEVEL_LABELS: Record<CurrentLevel, string> = {
@@ -85,7 +87,6 @@ function DashboardContent() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null)
   const [curriculum, setCurriculum] = useState<ActiveCurriculum | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeToast, setActiveToast] = useState<string | null>(null)
 
   // Fetch real profile & complete curriculum foundation with activities
@@ -155,22 +156,6 @@ function DashboardContent() {
     return "Good evening"
   }
 
-  const handleNavClick = (item: NavItem) => {
-    if (item.href !== "#") {
-      router.push(item.href)
-      return
-    }
-    setActiveToast(`${item.label} will be available in an upcoming phase.`)
-    setTimeout(() => {
-      setActiveToast(null)
-    }, 2800)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.replace("/login")
-  }
-
   if (loading) {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background text-foreground">
@@ -231,7 +216,7 @@ function DashboardContent() {
   const currentModCompletedCount = currentModActivities.filter((a) => a.is_completed).length
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300">
+    <AppShell maxWidth="1400px">
       {/* Toast Notification */}
       {activeToast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-md backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
@@ -239,126 +224,48 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Mobile Drawer Overlay */}
-      {mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
-        />
-      )}
+      <div className="space-y-8">
+        {/* 1. HEADER BAR */}
+        <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              LEARNER WORKSPACE
+            </span>
+            <h1 className="font-serif text-3xl font-normal tracking-tight text-foreground md:text-4xl mt-1">
+              {getGreeting()}, <span className="italic text-primary">{displayName}.</span>
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Current Goal: <span className="font-medium text-foreground">{learningGoal}</span>
+            </p>
+          </div>
 
-      {/* LEFT COLUMN: Sidebar Navigation */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div>
-          <div className="flex items-center justify-between pb-5">
+          <div className="flex items-center gap-3 self-start md:self-auto">
             <Link
-              href="/"
-              className="text-[11px] font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
+              href="/settings"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-xs transition-colors hover:text-foreground"
             >
-              LEARNPILOT
+              <Settings size={14} />
+              <span>Preferences</span>
             </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground lg:hidden"
-              aria-label="Close navigation"
+            <Link
+              href="/journey"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
             >
-              <X size={16} />
-            </button>
+              <PlayCircle size={14} />
+              <span>Continue Today's Journey</span>
+            </Link>
           </div>
+        </header>
 
-          <nav className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
-                    item.active
-                      ? "font-medium text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
-                >
-                  <Icon size={14} className={item.active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        <div className="space-y-2.5 pt-3 border-t border-border/40">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Appearance</span>
-            <ThemeToggle />
+        {/* ERROR ALERT */}
+        {errorMessage && (
+          <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-xs text-destructive">
+            <AlertCircle size={16} className="shrink-0" />
+            <span>{errorMessage}</span>
           </div>
-          {isConfigured && user && (
-            <button
-              onClick={handleSignOut}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-            >
-              <LogOut size={13} />
-              <span>Sign out</span>
-            </button>
-          )}
-        </div>
-      </aside>
+        )}
 
-      {/* RIGHT MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto px-4 py-8 md:px-10 lg:px-12">
-        <div className="mx-auto max-w-6xl space-y-8">
-          {/* 1. HEADER BAR */}
-          <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setMobileMenuOpen(true)}
-                  className="rounded-lg border border-border/60 p-2 text-muted-foreground hover:text-foreground lg:hidden"
-                  aria-label="Open navigation menu"
-                >
-                  <Menu size={18} />
-                </button>
-                <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  LEARNER WORKSPACE
-                </span>
-              </div>
-              <h1 className="font-serif text-3xl font-normal tracking-tight text-foreground md:text-4xl mt-1">
-                {getGreeting()}, <span className="italic text-primary">{displayName}.</span>
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Current Goal: <span className="font-medium text-foreground">{learningGoal}</span>
-              </p>
-            </div>
 
-            <div className="flex items-center gap-3 self-start md:self-auto">
-              <Link
-                href="/settings"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-xs transition-colors hover:text-foreground"
-              >
-                <Settings size={14} />
-                <span>Preferences</span>
-              </Link>
-              <Link
-                href="/journey"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
-              >
-                <PlayCircle size={14} />
-                <span>Continue Today's Journey</span>
-              </Link>
-            </div>
-          </header>
-
-          {/* ERROR ALERT */}
-          {errorMessage && (
-            <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-xs text-destructive">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
 
           {/* UNINITIALIZED PLAN BANNER */}
           {(!curriculum || !curriculum.plan) && (
@@ -659,7 +566,6 @@ function DashboardContent() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </AppShell>
   )
 }

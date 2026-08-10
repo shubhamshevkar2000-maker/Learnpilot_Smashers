@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Eye, EyeOff, ArrowRight, Sparkles, AlertCircle, ArrowLeft } from "lucide-react"
+import { Eye, EyeOff, ArrowRight, Sparkles, AlertCircle, ArrowLeft, Rocket } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MagneticButton } from "@/components/magnetic-button"
@@ -33,13 +33,14 @@ function LoginForm() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
 
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      router.replace(redirectUrl)
+      router.replace(redirectUrl === "/onboarding" ? "/dashboard" : redirectUrl)
     }
   }, [user, authLoading, router, redirectUrl])
 
@@ -74,12 +75,44 @@ function LoginForm() {
           setErrorMessage(error.message || "An error occurred while signing in. Please try again.")
         }
       } else {
-        router.push(redirectUrl)
+        router.push(redirectUrl === "/onboarding" ? "/dashboard" : redirectUrl)
       }
     } catch (err: any) {
       setErrorMessage(err.message || "A network error occurred. Please try again.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDemoLogin = async () => {
+    setErrorMessage(null)
+    setInfoMessage(null)
+
+    if (!isConfigured) {
+      setErrorMessage(
+        "Supabase credentials are not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
+      )
+      return
+    }
+
+    setDemoLoading(true)
+
+    try {
+      const { error } = await signIn("demo@learnpilot.app", "LearnPilot@Demo2026!")
+
+      if (error) {
+        setErrorMessage(
+          error.message.includes("Invalid login credentials")
+            ? "Demo account is not seeded yet. Please run 'npm run seed:demo' in the terminal to initialize it."
+            : error.message || "Failed to sign into demo account. Please try again."
+        )
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || "A network error occurred while connecting to demo account.")
+    } finally {
+      setDemoLoading(false)
     }
   }
 
@@ -191,7 +224,7 @@ function LoginForm() {
           <div className="pt-2">
             <MagneticButton
               type="submit"
-              disabled={loading}
+              disabled={loading || demoLoading}
               className="w-full justify-center py-3.5 text-sm min-h-[44px]"
             >
               {loading ? (
@@ -208,6 +241,42 @@ function LoginForm() {
             </MagneticButton>
           </div>
         </form>
+
+        {/* Demo Account Section */}
+        <div className="mt-5 space-y-3">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/70" />
+            </div>
+            <span className="relative bg-background px-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+              Or explore instantly
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={loading || demoLoading}
+            id="btn-demo-login"
+            className="group relative flex w-full items-center justify-center gap-2.5 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3.5 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/60 hover:bg-primary/15 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.99] disabled:opacity-50 min-h-[44px]"
+          >
+            {demoLoading ? (
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                <span className="text-xs font-semibold text-primary">Signing into demo...</span>
+              </div>
+            ) : (
+              <>
+                <Rocket size={16} className="text-primary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                <span className="font-semibold text-primary">🚀 Try Demo Account</span>
+              </>
+            )}
+          </button>
+
+          <p className="text-center text-[11px] text-muted-foreground">
+            Explore LearnPilot with a preloaded demo learner
+          </p>
+        </div>
 
         <div className="mt-8 text-center text-xs text-muted-foreground">
           Don&apos;t have an account?{" "}

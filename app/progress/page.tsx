@@ -29,26 +29,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { createClient } from "@/lib/supabase/client"
 import { getProgressViewModel, type ProgressViewModel } from "@/lib/services/progress-service"
-
-interface NavItem {
-  id: string
-  label: string
-  icon: typeof Compass
-  href: string
-  active?: boolean
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: Layers, href: "/dashboard" },
-  { id: "journey", label: "Daily Journey", icon: Calendar, href: "/journey" },
-  { id: "path", label: "Learning Path", icon: Compass, href: "/path" },
-  { id: "courses", label: "Courses", icon: BookOpen, href: "/courses" },
-  { id: "ai-coach", label: "AI Coach", icon: Bot, href: "/ai-coach" },
-  { id: "assessments", label: "Assessments", icon: CheckCircle, href: "/assessments" },
-  { id: "progress", label: "Progress", icon: BarChart3, href: "/progress", active: true },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
-]
+import { AppShell } from "@/components/layout/app-shell"
 
 export default function ProgressPage() {
   return (
@@ -60,12 +41,12 @@ export default function ProgressPage() {
 
 function ProgressContent() {
   const router = useRouter()
-  const { user, isConfigured, signOut } = useAuth()
+  const { user, isConfigured } = useAuth()
   const supabase = createClient()
 
   const [loading, setLoading] = useState(true)
-  const [viewModel, setViewModel] = useState<ProgressViewModel | null>(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [data, setData] = useState<ProgressViewModel | null>(null)
   const [activeToast, setActiveToast] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
@@ -76,14 +57,12 @@ function ProgressContent() {
     }
 
     try {
+      setLoading(true)
       const vm = await getProgressViewModel(supabase, user.id)
-      if (!vm || !vm.profile.onboarding_completed) {
-        router.replace("/onboarding")
-        return
-      }
-      setViewModel(vm)
-    } catch (err) {
-      console.error("Error loading progress data:", err)
+      setData(vm)
+    } catch (err: any) {
+      console.error("[Progress] Failed to load progress data:", err)
+      setErrorMessage("Failed to load progress analytics.")
     } finally {
       setLoading(false)
     }
@@ -93,133 +72,31 @@ function ProgressContent() {
     loadData()
   }, [loadData])
 
-  const handleNavClick = (item: NavItem) => {
-    if (item.href !== "#") {
-      router.push(item.href)
-      return
-    }
-    setActiveToast(`${item.label} will be available in the upcoming phase.`)
-    setTimeout(() => {
-      setActiveToast(null)
-    }, 2800)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.replace("/login")
-  }
-
-  if (loading || !viewModel) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background text-foreground">
+      <div className="flex min-h-screen bg-background items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
           <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Analyzing Metrics...
+            Loading Progress Analytics...
           </p>
         </div>
       </div>
     )
   }
 
-  const displayName = viewModel.profile.display_name || user?.user_metadata?.full_name || "Learner"
-  const avatarInitial = displayName.charAt(0).toUpperCase() || "L"
+  const viewModel = data!
+  const displayName = data?.profile?.display_name || user?.user_metadata?.full_name || "Learner"
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors duration-300">
+    <AppShell maxWidth="1280px">
       {activeToast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-sm backdrop-blur-md">
           <span>{activeToast}</span>
         </div>
       )}
 
-      {mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-52 flex-col justify-between border-r border-border/40 bg-background/95 px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div>
-          <div className="flex items-center justify-between pb-5">
-            <Link
-              href="/"
-              className="text-[11px] font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
-            >
-              LEARNPILOT
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground lg:hidden"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <nav className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
-                    item.active
-                      ? "font-medium text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                  }`}
-                >
-                  <Icon size={14} className={item.active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        <div className="space-y-2.5 pt-3 border-t border-border/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">
-                {avatarInitial}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
-          >
-            <LogOut size={12} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 overflow-y-auto w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <div className="max-w-[1000px] space-y-8 pb-12">
-          
-          <div className="flex items-center justify-between pb-2 border-b border-border/40 lg:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-foreground hover:bg-muted"
-            >
-              <Menu size={18} />
-            </button>
-            <span className="text-[11px] font-semibold tracking-[0.25em] text-foreground">
-              LEARNPILOT
-            </span>
-            <div className="w-10" />
-          </div>
+      <div className="max-w-[1000px] space-y-8 pb-12">
 
           <header className="space-y-1">
             <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
@@ -506,7 +383,6 @@ function ProgressContent() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AppShell>
   )
 }

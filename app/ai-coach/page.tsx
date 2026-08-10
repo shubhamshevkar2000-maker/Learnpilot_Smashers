@@ -1,5 +1,6 @@
 "use client"
 
+import { AppShell } from "@/components/layout/app-shell"
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -296,7 +297,7 @@ function AICoachContent() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
+      handleSendMessage(inputMessage)
     }
   }
 
@@ -314,9 +315,9 @@ function AICoachContent() {
 
   if (profileLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-background text-foreground">
+      <div className="flex h-screen bg-background items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
           <p className="text-xs text-muted-foreground">Connecting to your AI Coach...</p>
         </div>
       </div>
@@ -324,113 +325,19 @@ function AICoachContent() {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground transition-colors duration-300">
-      {/* Mobile Menu Backdrop */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Navigation */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-transform duration-300 md:static md:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-border px-6 py-5">
-          <Link
-            href="/"
-            className="text-xs font-semibold tracking-[0.25em] text-foreground transition-opacity hover:opacity-80"
-          >
-            LEARNPILOT
-          </Link>
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-muted-foreground hover:text-foreground md:hidden"
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* User Info Card */}
-        <div className="border-b border-border px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <UserIcon size={16} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-foreground">
-                {profile?.display_name || user?.email?.split("@")[0] || "Learner"}
-              </p>
-              <p className="truncate text-[10px] text-muted-foreground">
-                {profile?.current_level
-                  ? LEVEL_LABELS[profile.current_level as CurrentLevel] || profile.current_level
-                  : "Learner"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Nav Links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const isActive = item.active
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-              >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Sidebar Footer */}
-        <div className="border-t border-border p-4 flex items-center justify-between">
-          <ThemeToggle />
-          <button
-            onClick={() => signOut()}
-            className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-          >
-            <LogOut size={14} />
-            <span>Sign out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
+    <AppShell maxWidth="full" noPadding fullHeight>
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header Bar */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/40 px-4 md:px-8 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="text-muted-foreground hover:text-foreground md:hidden"
-              aria-label="Open menu"
-            >
-              <Menu size={20} />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Bot size={18} />
-              </div>
-              <div>
-                <h1 className="text-sm font-semibold text-foreground leading-none">AI Learning Coach</h1>
-                <p className="text-[11px] text-muted-foreground mt-0.5 hidden sm:block">
-                  Personalized guidance powered by real learner context
-                </p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Bot size={18} />
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold text-foreground leading-none">AI Learning Coach</h1>
+              <p className="text-[11px] text-muted-foreground mt-0.5 hidden sm:block">
+                Personalized guidance powered by real learner context
+              </p>
             </div>
           </div>
 
@@ -576,7 +483,7 @@ function AICoachContent() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              handleSendMessage()
+              handleSendMessage(inputMessage)
             }}
             className="max-w-3xl mx-auto relative flex items-center gap-2"
           >
@@ -609,6 +516,6 @@ function AICoachContent() {
           </p>
         </footer>
       </div>
-    </div>
+    </AppShell>
   )
 }

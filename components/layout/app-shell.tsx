@@ -24,10 +24,17 @@ const NAV_ITEMS = [
 
 interface AppShellProps {
   children: React.ReactNode
-  maxWidth?: "900px" | "1100px" | "1280px" | "1400px"
+  maxWidth?: "900px" | "1100px" | "1280px" | "1400px" | "full" | "none"
+  noPadding?: boolean
+  fullHeight?: boolean
 }
 
-export function AppShell({ children, maxWidth = "1280px" }: AppShellProps) {
+export function AppShell({
+  children,
+  maxWidth = "1280px",
+  noPadding = false,
+  fullHeight = false,
+}: AppShellProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { user, isConfigured, signOut } = useAuth()
@@ -38,14 +45,23 @@ export function AppShell({ children, maxWidth = "1280px" }: AppShellProps) {
     if (href && href !== "#") router.push(href)
   }
 
-  const maxWidthClass = 
-    maxWidth === "900px" ? "max-w-[900px]" :
-    maxWidth === "1100px" ? "max-w-[1100px]" :
-    maxWidth === "1400px" ? "max-w-[1400px]" :
-    "max-w-[1280px]"
+  const maxWidthClass =
+    maxWidth === "full" || maxWidth === "none"
+      ? "max-w-none w-full"
+      : maxWidth === "900px"
+      ? "max-w-[900px]"
+      : maxWidth === "1100px"
+      ? "max-w-[1100px]"
+      : maxWidth === "1400px"
+      ? "max-w-[1400px]"
+      : "max-w-[1280px]"
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div
+      className={`flex ${
+        fullHeight ? "h-screen overflow-hidden" : "min-h-screen"
+      } bg-background text-foreground transition-colors duration-300`}
+    >
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
         <div
@@ -54,9 +70,9 @@ export function AppShell({ children, maxWidth = "1280px" }: AppShellProps) {
         />
       )}
 
-      {/* LEFT COLUMN: Sidebar Navigation */}
+      {/* LEFT COLUMN: Fixed Width Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col justify-between border-r border-border/40 bg-background/95 px-5 py-6 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[240px] min-w-[240px] max-w-[240px] shrink-0 flex-shrink-0 flex-col justify-between border-r border-border/40 bg-background/95 px-5 py-6 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -80,7 +96,11 @@ export function AppShell({ children, maxWidth = "1280px" }: AppShellProps) {
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon
-              const active = pathname?.startsWith(item.href)
+              const active =
+                item.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname?.startsWith(item.href)
+
               return (
                 <button
                   key={item.id}
@@ -101,7 +121,9 @@ export function AppShell({ children, maxWidth = "1280px" }: AppShellProps) {
 
         <div className="space-y-4 pt-6 border-t border-border/40">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Appearance</span>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+              Appearance
+            </span>
             <ThemeToggle />
           </div>
           {isConfigured && user && (
@@ -117,18 +139,36 @@ export function AppShell({ children, maxWidth = "1280px" }: AppShellProps) {
       </aside>
 
       {/* RIGHT COLUMN: Main Content Area */}
-      <main className={`flex-1 overflow-y-auto overflow-x-hidden min-w-0 w-full ${maxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 space-y-8 sm:space-y-12`}>
+      <main
+        className={`flex-1 min-w-0 w-full ${
+          fullHeight ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto overflow-x-hidden"
+        } ${maxWidthClass} ${
+          noPadding
+            ? ""
+            : "mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 space-y-8 sm:space-y-12"
+        }`}
+      >
         {/* Mobile Header (Only visible on small screens) */}
-        <div className="flex items-center justify-between pb-4 border-b border-border/40 lg:hidden mb-6">
-          <button onClick={() => setMobileMenuOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted/50">
+        <div
+          className={`flex items-center justify-between border-b border-border/40 lg:hidden ${
+            noPadding ? "p-3 shrink-0" : "pb-4 mb-6"
+          }`}
+        >
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted/50"
+            aria-label="Open navigation"
+          >
             <Menu size={20} />
           </button>
-          <span className="text-[12px] font-semibold tracking-[0.25em] text-foreground">LEARNPILOT</span>
+          <span className="text-[12px] font-semibold tracking-[0.25em] text-foreground">
+            LEARNPILOT
+          </span>
           <div className="w-10" />
         </div>
 
         {/* The actual page content is injected here */}
-        <div className="min-w-0 w-full">
+        <div className={`min-w-0 w-full ${fullHeight ? "flex-1 flex flex-col h-full overflow-hidden" : ""}`}>
           {children}
         </div>
       </main>

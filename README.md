@@ -4,7 +4,10 @@
 
 **AI-powered personalized learning for every learner**
 
-[📄 Solution Document](#-deliverables) · [🖥️ Live Demo](http://localhost:3000) · [🎥 Demo Video](#-core-experience)
+[📄 Solution Document](https://drive.google.com/file/d/1OPannhyR72xPYWoI-Rp0jm9aZC5rCGG9/view?usp=drive_link) ·
+ppt = https://drive.google.com/file/d/1BYXckDo7lc0fKKO55iY1m-Puo9UoKwc9/view?usp=drive_link
+ [🖥️ Live Demo](http://localhost:3000) ·
+  [🎥 Demo Video](https://drive.google.com/file/d/1xyisEOYtatN1SO5CDxd2nSJ_p6TV9xTW/view?usp=drive_link)
 
 ▶ Continuous, goal-aligned learning with dynamic daily pacing, active knowledge gap detection, contextual assessments, and intelligent AI coaching.
 
@@ -22,6 +25,7 @@
 
 [Results / Impact](#-results--impact) ·
 [How it works](#-how-it-works) ·
+[Demo Account](#-demo-account) ·
 [Quickstart](#-quickstart) ·
 [Core Experience](#-core-experience) ·
 [Personalization / Adaptive Learning](#-personalization--adaptive-learning) ·
@@ -137,12 +141,38 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 5. Build for Production
+### 5. Seed Demo Account (Optional)
+
+```bash
+npm run seed:demo
+```
+
+### 6. Build for Production
 
 ```bash
 npm run build
 npm run start
 ```
+
+---
+
+## 🎮 Demo Account
+
+For rapid evaluation, LearnPilot includes a production-ready, pre-configured demo account with rich learning data:
+
+| Property | Value |
+|---|---|
+| **Demo Email** | `demo@learnpilot.app` |
+| **Demo Password** | `LearnPilot@Demo2026!` |
+| **Learner Profile** | Alex Morgan (Full-Stack Web Development, Intermediate, 45 min/day) |
+| **One-Click Access** | Click **"🚀 Try Demo Account"** directly on the [`/login`](http://localhost:3000/login) page |
+
+### What's Preloaded:
+* **Learning Path**: 8 sequential Full-Stack modules with completed (*Web Fundamentals*, *JS Foundations*), active (*Advanced JS & Async*), and locked modules.
+* **Daily Journey**: Calibrated for 45 min/day with real activity timers and completion verification.
+* **Assessments**: Completed 10-question evaluations for past modules (90% & 80% scores) and active Module 3 diagnostic checkpoint.
+* **Personal Notebook**: 4 tagged technical notes with code snippets, Markdown, and deep-linked source metadata.
+* **Progress & AI Coach**: Real-time analytics, skill mastery trends, and context-grounded AI coaching.
 
 ---
 

@@ -192,6 +192,7 @@ function AssessmentTakingContent({ params }: { params: Promise<{ id: string }> }
             ${tc.input.includes('return') ? tc.input : `return ${tc.input};`}
           `)
           
+          const result = runFn(win.useState, win.React)
           const cleanOutput = String(result).replace(/^['"]|['"]$/g, '').trim()
           const cleanExpected = String(tc.expected).replace(/^['"]|['"]$/g, '').trim()
           const isPassed = String(result) === tc.expected || cleanOutput === cleanExpected || JSON.stringify(result) === tc.expected
