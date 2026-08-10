@@ -124,6 +124,51 @@ export async function compressImageFile(file: File, maxDimension = 1200, quality
   })
 }
 
+function serializeMetadata(note: Partial<LearnerNote>): string {
+  return JSON.stringify({
+    tags: note.tags || [],
+    images: note.images || [],
+    source_type: (note.source_type === "journey" || note.source_type === "daily_journey")
+      ? "journey"
+      : (note.source_type || "general"),
+    source_id: note.source_id || null,
+    source_title: note.source_title || null,
+    source_day: note.source_day !== undefined ? note.source_day : null,
+    source_module_id: note.source_module_id || null,
+    source_module_title: note.source_module_title || null,
+    source_sequence: note.source_sequence !== undefined ? note.source_sequence : null,
+    is_pinned: !!note.is_pinned,
+    updated_at: note.updated_at || new Date().toISOString(),
+  })
+}
+
+function deserializeMetadata(raw?: string | null): Partial<LearnerNote> {
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    if (typeof parsed === "object" && parsed !== null) {
+      return {
+        tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+        images: Array.isArray(parsed.images) ? parsed.images : [],
+        source_type: (parsed.source_type === "journey" || parsed.source_type === "daily_journey")
+          ? "daily_journey"
+          : (parsed.source_type || "general"),
+        source_id: parsed.source_id || null,
+        source_title: parsed.source_title || null,
+        source_day: parsed.source_day !== undefined ? parsed.source_day : null,
+        source_module_id: parsed.source_module_id || null,
+        source_module_title: parsed.source_module_title || null,
+        source_sequence: parsed.source_sequence !== undefined ? parsed.source_sequence : null,
+        is_pinned: !!parsed.is_pinned,
+        updated_at: parsed.updated_at || null,
+      }
+    }
+  } catch {
+    // If difficulty_reflection was a plain text string
+  }
+  return {}
+}
+
 /**
  * Fetch all notes for the authenticated user from Supabase with LocalStorage sync fallback.
  */
@@ -140,38 +185,55 @@ export async function fetchUserNotes(
       .from("learner_notes" as any)
       .select("*")
       .eq("user_id", userId)
-      .order("updated_at", { ascending: false }) as any)
+      .order("created_at", { ascending: false }) as any)
 
     if (!error && data && Array.isArray(data)) {
-      const localMap = new Map(localNotes.map(n => [n.id, n]))
+      const localMap = new Map(localNotes.map((n) => [n.id, n]))
 
       const formatted: LearnerNote[] = data.map((item: any) => {
+        const meta = deserializeMetadata(item.difficulty_reflection)
         const local = localMap.get(item.id)
+
+        const isPinned = item.is_pinned !== undefined
+          ? !!item.is_pinned
+          : (meta.is_pinned !== undefined ? !!meta.is_pinned : !!local?.is_pinned)
+
+        const tags = Array.isArray(item.tags) && item.tags.length > 0
+          ? item.tags
+          : (meta.tags && meta.tags.length > 0 ? meta.tags : (local?.tags || []))
+
+        const rawSource = item.source_type || meta.source_type || local?.source_type || "general"
+        const sourceType: NoteSourceType = (rawSource === "journey" || rawSource === "daily_journey")
+          ? "daily_journey"
+          : (rawSource as NoteSourceType)
+
+        const sourceTitle = item.source_title || meta.source_title || local?.source_title || null
+        const images = Array.isArray(item.images) ? item.images : (meta.images || local?.images || [])
+        const updatedAt = item.updated_at || meta.updated_at || local?.updated_at || item.created_at || new Date().toISOString()
+
         return {
           id: item.id,
           user_id: item.user_id,
           title: item.title || item.topic || "Untitled Note",
           content: item.content || item.note_content || "",
-          tags: Array.isArray(item.tags) ? item.tags : (local?.tags || []),
-          images: Array.isArray(item.images) ? item.images : (local?.images || []),
-          source_type: (item.source_type === "journey" || item.source_type === "daily_journey")
-            ? "daily_journey"
-            : item.source_type || "general",
-          source_id: item.source_id || item.activity_id || item.module_id || local?.source_id || null,
-          source_title: item.source_title || local?.source_title || null,
-          source_day: item.source_day !== undefined ? item.source_day : (local?.source_day || null),
-          source_module_id: item.source_module_id || local?.source_module_id || null,
-          source_module_title: item.source_module_title || local?.source_module_title || null,
-          source_sequence: item.source_sequence !== undefined ? item.source_sequence : (local?.source_sequence || null),
-          is_pinned: !!item.is_pinned,
+          tags,
+          images,
+          source_type: sourceType,
+          source_id: item.source_id || meta.source_id || item.activity_id || item.module_id || local?.source_id || null,
+          source_title: sourceTitle,
+          source_day: item.source_day !== undefined ? item.source_day : (meta.source_day !== undefined ? meta.source_day : (local?.source_day || null)),
+          source_module_id: item.source_module_id || meta.source_module_id || item.module_id || local?.source_module_id || null,
+          source_module_title: item.source_module_title || meta.source_module_title || local?.source_module_title || null,
+          source_sequence: item.source_sequence !== undefined ? item.source_sequence : (meta.source_sequence !== undefined ? meta.source_sequence : (local?.source_sequence || null)),
+          is_pinned: isPinned,
           created_at: item.created_at || new Date().toISOString(),
-          updated_at: item.updated_at || new Date().toISOString(),
+          updated_at: updatedAt,
         }
       })
 
       // Merge any local notes that haven't synced yet
-      const remoteIds = new Set(formatted.map(n => n.id))
-      const unsyncedLocals = localNotes.filter(n => !remoteIds.has(n.id))
+      const remoteIds = new Set(formatted.map((n) => n.id))
+      const unsyncedLocals = localNotes.filter((n) => !remoteIds.has(n.id))
       const merged = [...formatted, ...unsyncedLocals]
 
       saveLocalNotes(userId, merged)
@@ -215,7 +277,7 @@ export async function createNote(
 
   // Update Local State first for instantaneous response
   const currentLocal = getLocalNotes(userId)
-  const updatedLocal = [newNote, ...currentLocal.filter(n => n.id !== newNote.id)]
+  const updatedLocal = [newNote, ...currentLocal.filter((n) => n.id !== newNote.id)]
   saveLocalNotes(userId, updatedLocal)
 
   // Try Remote Supabase Insert
@@ -225,13 +287,9 @@ export async function createNote(
       .insert({
         id: newNote.id,
         user_id: newNote.user_id,
-        title: newNote.title,
-        content: newNote.content,
-        tags: newNote.tags,
-        source_type: newNote.source_type === "daily_journey" ? "journey" : newNote.source_type,
-        source_id: newNote.source_id,
-        source_title: newNote.source_title,
-        is_pinned: newNote.is_pinned,
+        topic: newNote.title,
+        note_content: newNote.content,
+        difficulty_reflection: serializeMetadata(newNote),
       } as any)
       .select()
       .single() as any)
@@ -241,7 +299,7 @@ export async function createNote(
         ...newNote,
         id: data.id,
         created_at: data.created_at || newNote.created_at,
-        updated_at: data.updated_at || newNote.updated_at,
+        updated_at: newNote.updated_at,
       }
     }
   } catch (err) {
@@ -278,18 +336,16 @@ export async function updateNote(
   }
 
   try {
-    const payload: any = {
-      updated_at: updatedTimestamp,
+    const payload: any = {}
+    if (updatedNote) {
+      payload.topic = updatedNote.title
+      payload.note_content = updatedNote.content
+      payload.difficulty_reflection = serializeMetadata(updatedNote)
+    } else {
+      if (updates.title !== undefined) payload.topic = updates.title
+      if (updates.content !== undefined) payload.note_content = updates.content
+      payload.difficulty_reflection = serializeMetadata(updates)
     }
-    if (updates.title !== undefined) payload.title = updates.title
-    if (updates.content !== undefined) payload.content = updates.content
-    if (updates.tags !== undefined) payload.tags = updates.tags
-    if (updates.source_type !== undefined) {
-      payload.source_type = updates.source_type === "daily_journey" ? "journey" : updates.source_type
-    }
-    if (updates.source_id !== undefined) payload.source_id = updates.source_id
-    if (updates.source_title !== undefined) payload.source_title = updates.source_title
-    if (updates.is_pinned !== undefined) payload.is_pinned = updates.is_pinned
 
     const { error } = await (supabase
       .from("learner_notes" as any)

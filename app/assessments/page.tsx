@@ -31,7 +31,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { createClient } from "@/lib/supabase/client"
 import type { Database } from "@/types/database.types"
 import type { StaticAssessment } from "@/types/assessment"
-import { getOrCreateActiveCurriculum } from "@/lib/services/curriculum-service"
+import { getActiveCurriculumFoundation } from "@/lib/services/curriculum-service"
 import { generateAssessmentForModule } from "@/lib/generator/assessment-generator"
 import { AppShell } from "@/components/layout/app-shell"
 
@@ -68,6 +68,7 @@ function AssessmentsContent() {
 
     try {
       setLoading(true)
+      setErrorMessage(null)
 
       const { data: profData, error: profErr } = await supabase
         .from("learner_profiles")
@@ -75,14 +76,19 @@ function AssessmentsContent() {
         .eq("user_id", user.id)
         .maybeSingle()
 
-      if (profErr) throw profErr
+      if (profErr) {
+        console.error("Profile load error:", profErr)
+        setErrorMessage(`Error loading profile: ${profErr.message}`)
+        return
+      }
+
       if (!profData || !profData.onboarding_completed) {
         router.replace("/onboarding")
         return
       }
 
       setProfile(profData as LearnerProfile)
-      const curriculum = await getOrCreateActiveCurriculum(supabase, user.id)
+      const curriculum = await getActiveCurriculumFoundation(supabase, user.id)
 
       const { data: attempts, error: attErr } = await supabase
         .from("assessment_attempts")
@@ -90,26 +96,29 @@ function AssessmentsContent() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
-      if (attErr) throw attErr
+      if (attErr) {
+        console.warn("Past attempts load error:", attErr.message)
+      }
+
       const attemptList = attempts || []
       setPastAttempts(attemptList)
 
       const completedModuleIds = new Set(
         attemptList
-          .filter(a => a.passed)
-          .map(a => a.module_id || a.metadata?.assessmentId || a.assessment_title)
+          .filter((a: any) => a.passed)
+          .map((a: any) => a.module_id || a.metadata?.assessmentId || a.assessment_title)
           .filter(Boolean)
       )
 
       const modules = curriculum?.modules || []
-      const incompleteMods = modules.filter(m => !completedModuleIds.has(m.id))
-      const completedMods = modules.filter(m => completedModuleIds.has(m.id))
+      const incompleteMods = modules.filter((m: any) => !completedModuleIds.has(m.id))
+      const completedMods = modules.filter((m: any) => completedModuleIds.has(m.id))
 
       if (incompleteMods.length > 0) {
         const activeMod = incompleteMods[0]
         setActiveAssessment(generateAssessmentForModule(activeMod, profData as LearnerProfile))
         setUpcomingAssessments(
-          incompleteMods.slice(1).map(m => generateAssessmentForModule(m, profData as LearnerProfile))
+          incompleteMods.slice(1).map((m: any) => generateAssessmentForModule(m, profData as LearnerProfile))
         )
       } else {
         setActiveAssessment(null)
@@ -117,22 +126,24 @@ function AssessmentsContent() {
       }
 
       setCompletedAssessments(
-        completedMods.map(m => generateAssessmentForModule(m, profData as LearnerProfile))
+        completedMods.map((m: any) => generateAssessmentForModule(m, profData as LearnerProfile))
       )
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error loading assessments data:", err)
-      setErrorMessage("Failed to load assessments.")
+      setErrorMessage(err?.message || "Failed to load assessments.")
     } finally {
       setLoading(false)
     }
   }, [user, isConfigured, supabase, router])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    if (user) {
+      loadData()
+    }
+  }, [user, loadData])
 
-  if (loading || !profile) {
+  if (loading) {
     return (
       <div className="flex min-h-screen bg-background items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -241,8 +252,25 @@ function AssessmentsContent() {
                   </p>
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground">
-                  No active modules found in your Learning Path.
+                <div className="rounded-2xl border border-border/50 bg-card/60 p-8 text-center backdrop-blur-md space-y-4 max-w-xl mx-auto my-4 shadow-sm">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Compass size={24} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-serif text-lg font-normal text-foreground">
+                      No active modules found
+                    </h3>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                      Generate your personalized Learning Path to unlock modular assessments and evaluate your knowledge.
+                    </p>
+                  </div>
+                  <Link
+                    href="/path"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+                  >
+                    <span>Go to Learning Path</span>
+                    <ArrowRight size={14} />
+                  </Link>
                 </div>
               )}
 

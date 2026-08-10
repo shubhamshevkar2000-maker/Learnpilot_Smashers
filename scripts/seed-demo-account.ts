@@ -528,14 +528,17 @@ async function seedDemo() {
   const SEED_NOTES = [
     {
       title: "JavaScript Closures & Lexical Scope",
-      moduleSeq: 2,
+      tags: ["JavaScript", "Async"],
+      source_type: "journey",
+      source_title: "Variable Scope, Execution Context & Closures",
+      is_pinned: true,
       content: `# JavaScript Closures & Lexical Scope
 
-A **closure** is the combination of a function bundled together with references to its surrounding state (the lexical environment). In JavaScript, closures give a function access to its outer function's scope from an inner function.
+A **closure** is the combination of a function bundled together (enclosed) with references to its surrounding state (the lexical environment). In JavaScript, closures give an inner function access to an outer function's scope even after the outer function has finished executing.
 
 \`\`\`javascript
 function createCounter(initialValue = 0) {
-  let count = initialValue; // Private state retained in heap
+  let count = initialValue; // Private state retained in heap memory
 
   return {
     increment: () => ++count,
@@ -546,26 +549,26 @@ function createCounter(initialValue = 0) {
 
 const counter = createCounter(10);
 console.log(counter.increment()); // 11
-console.log(counter.getValue());   // 11
+console.log(counter.increment()); // 12
+console.log(counter.getValue());   // 12
 \`\`\`
 
 ### Practical Use Cases:
-1. **Data Encapsulation / Private Variables**: Creating true private state before ES2022 private fields (\`#field\`).
-2. **Partial Application & Currying**: Pre-configuring arguments for reusable utility functions.
-3. **Event Handler Factories**: Passing custom context to asynchronous DOM handlers.
+1. **Data Encapsulation / Private State**: Emulating private variables before ES2022 class private fields (\`#field\`).
+2. **Partial Application & Currying**: Creating reusable function factories with pre-bound arguments.
+3. **Event Handler Factories**: Retaining specific context/state across async event listener callbacks.
 
-> **Key Rule**: Inner functions retain references to outer scope variables, not value copies. Keep memory lifecycle in mind to avoid retaining detached DOM elements.`,
-      tags: ["JavaScript", "Async", "Core Concepts"],
-      source_type: "journey",
-      source_title: "Variable Scope, Execution Context & Closures",
-      is_pinned: true,
+> **Key Rule**: Closures store references to outer scope variables, not snapshot copies. Be mindful of closure memory retention when referencing large objects or DOM nodes.`,
     },
     {
       title: "React useEffect Dependency Array & Cleanup",
-      moduleSeq: 4,
+      tags: ["React", "Hooks"],
+      source_type: "learning_path",
+      source_title: "React & Component Architecture",
+      is_pinned: false,
       content: `# React useEffect Dependency Array & Cleanup
 
-The \`useEffect\` hook synchronizes a React component with an external system (network, DOM subscriptions, browser timers).
+The \`useEffect\` hook synchronizes a React component with external systems such as APIs, DOM subscriptions, websockets, and browser timers.
 
 \`\`\`tsx
 useEffect(() => {
@@ -587,44 +590,43 @@ useEffect(() => {
 
   fetchLearnerData();
 
-  // Cleanup function runs on unmount & before next execution
+  // Cleanup function runs before re-running the effect and on component unmount
   return () => {
     abortController.abort();
   };
 }, [userId]);
 \`\`\`
 
-### Golden Rules:
-- **Exhaustive Dependencies**: Always include all reactive values (\`props\`, \`state\`, derived values) referenced in the effect.
-- **Race Condition Prevention**: Always use \`AbortController\` or active booleans for async effects to avoid updating unmounted states.
-- **Event Listeners**: Always remove \`window.addEventListener\` in the cleanup return callback.`,
-      tags: ["React", "Hooks", "Frontend"],
-      source_type: "learning_path",
-      source_title: "React Components & State Management",
-      is_pinned: false,
+### Golden Rules & Common Mistakes:
+- **Exhaustive Dependencies**: Always include every reactive value (\`props\`, \`state\`, and derived identifiers) referenced within the effect.
+- **Race Condition Prevention**: Always use \`AbortController\` or a cancellation flag for asynchronous requests to prevent stale updates on unmounted components.
+- **Cleanup Handlers**: Always return a cleanup function to remove event listeners, clear intervals (\`clearInterval\`), or disconnect active subscriptions.`,
     },
     {
       title: "REST API Design Best Practices & Error Handling",
-      moduleSeq: 5,
+      tags: ["Node.js", "APIs"],
+      source_type: "course",
+      source_title: "Node.js & APIs",
+      is_pinned: false,
       content: `# REST API Design Best Practices & Error Handling
 
-Standardized guidelines for robust, predictable, production-grade REST APIs.
+Standardized guidelines for constructing robust, practical, and maintainable RESTful APIs.
 
 ### 1. HTTP Methods & Resource URIs
-- \`GET /api/v1/courses\` — Retrieve collection
-- \`POST /api/v1/courses\` — Create resource
-- \`GET /api/v1/courses/:id\` — Retrieve single resource
-- \`PATCH /api/v1/courses/:id\` — Partial update
-- \`DELETE /api/v1/courses/:id\` — Safe deletion
+- \`GET /api/v1/courses\` — Retrieve course collection
+- \`POST /api/v1/courses\` — Create a new course resource
+- \`GET /api/v1/courses/:id\` — Retrieve specific course by ID
+- \`PATCH /api/v1/courses/:id\` — Partial update of a course
+- \`DELETE /api/v1/courses/:id\` — Idempotent resource deletion
 
-### 2. Standardized Error Response Contract
+### 2. Predictable Error Response Contract
 \`\`\`json
 {
   "error": {
     "code": "RESOURCE_NOT_FOUND",
     "message": "The requested course ID 817 does not exist.",
     "status": 404,
-    "timestamp": "2026-08-10T05:30:00Z"
+    "timestamp": "2026-08-10T08:00:00Z"
   }
 }
 \`\`\`
@@ -632,68 +634,100 @@ Standardized guidelines for robust, predictable, production-grade REST APIs.
 ### 3. Key Status Codes:
 - \`200 OK\` / \`201 Created\` / \`204 No Content\`
 - \`400 Bad Request\` / \`401 Unauthorized\` / \`403 Forbidden\` / \`404 Not Found\`
-- \`409 Conflict\` / \`422 Unprocessable Entity\` / \`429 Rate Limited\`
-- \`500 Internal Server Error\``,
-      tags: ["Node.js", "APIs", "Backend"],
-      source_type: "course",
-      source_title: "Backend Servers & RESTful APIs",
-      is_pinned: false,
+- \`409 Conflict\` / \`422 Unprocessable Entity\` / \`429 Too Many Requests\`
+- \`500 Internal Server Error\` (always log stack traces internally, never leak them to clients)`,
     },
     {
       title: "PostgreSQL Indexing & Query Optimization",
-      moduleSeq: 6,
+      tags: ["Database", "PostgreSQL", "Performance"],
+      source_type: "general",
+      source_title: "PostgreSQL & Databases",
+      is_pinned: false,
       content: `# PostgreSQL Indexing & Query Optimization
 
-Effective indexing turns slow table scans ($O(N)$) into blazing fast index lookups ($O(\\log N)$).
+Effective indexing turns sequential table scans ($O(N)$) into rapid index lookups ($O(\\log N)$).
 
 \`\`\`sql
--- 1. Explain query execution plan
-EXPLAIN ANALYZE
+-- 1. Analyze query execution plan with actual runtime stats
+EXPLAIN (ANALYZE, BUFFERS)
 SELECT id, title, status 
 FROM module_activities 
 WHERE user_id = 'a1b2c3d4-0000-0000-0000-000000000000' 
   AND day_number = 3;
 
--- 2. Create composite B-Tree index on high-cardinality filters
+-- 2. Create composite B-Tree index on high-cardinality query filters
 CREATE INDEX idx_module_activities_user_day 
 ON public.module_activities(user_id, day_number);
 
--- 3. GIN index for JSONB or array searches
+-- 3. GIN index for full-text search or JSONB array lookups
 CREATE INDEX idx_learner_notes_tags 
 ON public.learner_notes USING GIN(tags);
 \`\`\`
 
-### Index Guidelines:
-- **Leftmost Prefix Rule**: In composite indexes \`(a, b)\`, queries filtering by \`a\` or \`(a, b)\` use the index; queries filtering *only* by \`b\` do not.
-- **Over-indexing Warning**: Every index accelerates \`SELECT\` queries but adds write overhead to \`INSERT\`, \`UPDATE\`, and \`DELETE\`.`,
-      tags: ["Database", "PostgreSQL", "Performance"],
-      source_type: "general",
-      source_title: "Relational Databases & SQL Fundamentals",
-      is_pinned: false,
+### Core Indexing Principles & Trade-Offs:
+- **Leftmost Prefix Rule**: In composite indexes \`(a, b)\`, queries filtering by \`a\` or \`(a, b)\` use the index; queries filtering *only* by \`b\` cannot utilize the index efficiently.
+- **Index Selectivity**: Index columns with high cardinality (many distinct values) rather than low cardinality boolean/status flags.
+- **Write Overhead Trade-Off**: Every index accelerates read queries but incurs disk and I/O overhead on \`INSERT\`, \`UPDATE\`, and \`DELETE\`.`,
     },
   ]
 
+  // Query all current notes for demo user
+  const { data: existingNotesList } = await authClient
+    .from("learner_notes" as any)
+    .select("id, topic")
+    .eq("user_id", userId)
+
+  const seedTitles = new Set(SEED_NOTES.map((n) => n.title))
+
+  // Clean up any stale or invalid notes that are not in the seed set
+  if (existingNotesList && (existingNotesList as any).length > 0) {
+    for (const en of existingNotesList as any[]) {
+      if (!seedTitles.has(en.topic)) {
+        await authClient.from("learner_notes" as any).delete().eq("id", en.id).eq("user_id", userId)
+        console.log(`🧹 Cleaned up deprecated note: "${en.topic}" (ID: ${en.id})`)
+      }
+    }
+  }
+
   for (const note of SEED_NOTES) {
+    const metaPayload = JSON.stringify({
+      tags: note.tags,
+      source_type: note.source_type,
+      source_title: note.source_title,
+      is_pinned: note.is_pinned,
+      updated_at: new Date().toISOString(),
+    })
+
     const { data: existingNote } = await authClient
       .from("learner_notes" as any)
-      .select("id")
+      .select("id, topic")
       .eq("user_id", userId)
       .eq("topic", note.title)
       .maybeSingle()
 
-    const noteMod = moduleIdsForAssessment.find((m) => m.seq === note.moduleSeq)
+    if (existingNote) {
+      const { error: noteUpErr } = await authClient
+        .from("learner_notes" as any)
+        .update({
+          topic: note.title,
+          note_content: note.content,
+          difficulty_reflection: metaPayload,
+        } as any)
+        .eq("id", (existingNote as any).id)
+        .eq("user_id", userId)
 
-    if (!existingNote) {
+      if (noteUpErr) console.error(`Error updating note "${note.title}":`, noteUpErr)
+      else console.log(`✅ Updated existing Note: "${note.title}" (Pinned: ${note.is_pinned})`)
+    } else {
       const { error: noteInsErr } = await authClient.from("learner_notes" as any).insert({
         user_id: userId,
-        module_id: noteMod?.id || null,
         topic: note.title,
         note_content: note.content,
+        difficulty_reflection: metaPayload,
       } as any)
+
       if (noteInsErr) console.error(`Error inserting note "${note.title}":`, noteInsErr)
-      else console.log(`✅ Seeded Note: "${note.title}"`)
-    } else {
-      console.log(`ℹ️ Note already exists: "${note.title}"`)
+      else console.log(`✅ Seeded Note: "${note.title}" (Pinned: ${note.is_pinned})`)
     }
   }
 

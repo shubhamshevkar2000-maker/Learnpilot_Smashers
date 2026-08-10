@@ -15,7 +15,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import type { StaticAssessment } from "@/types/assessment"
 import type { Database } from "@/types/database.types"
 import { createClient } from "@/lib/supabase/client"
-import { getOrCreateActiveCurriculum } from "@/lib/services/curriculum-service"
+import { getActiveCurriculumFoundation } from "@/lib/services/curriculum-service"
 import { generateAssessmentForModule } from "@/lib/generator/assessment-generator"
 
 type LearnerProfile = Database["public"]["Tables"]["learner_profiles"]["Row"]
@@ -57,7 +57,7 @@ function AssessmentTakingContent({ params }: { params: Promise<{ id: string }> }
 
       if (!profData) throw new Error("Profile not found")
 
-      const curriculum = await getOrCreateActiveCurriculum(supabase, user.id)
+      const curriculum = await getActiveCurriculumFoundation(supabase, user.id)
       
       if (curriculum && curriculum.modules) {
         // Find the specific module matching the route ID

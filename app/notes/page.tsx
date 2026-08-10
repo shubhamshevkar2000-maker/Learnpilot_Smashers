@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
@@ -52,6 +51,19 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { AppShell } from "@/components/layout/app-shell"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { useAuth } from "@/components/auth/auth-provider"
+import { createClient } from "@/lib/supabase/client"
+import {
+  fetchUserNotes,
+  createNote,
+  updateNote,
+  deleteNote,
+  compressImageFile,
+  filterAndSortNotes,
+  type LearnerNote,
+  type NoteSourceType,
+} from "@/lib/services/notes-service"
 
 export default function NotesPage() {
   return (
@@ -467,20 +479,6 @@ function NotesContent() {
       const newCursorEnd = newCursorStart + textToInsert.length
       textarea.setSelectionRange(newCursorStart, newCursorEnd)
     }, 50)
-  }
-
-  const handleNavClick = (item: NavItem) => {
-    if (item.href !== "#") {
-      router.push(item.href)
-      return
-    }
-    setActiveToast(`${item.label} section coming soon.`)
-    setTimeout(() => setActiveToast(null), 2800)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.replace("/login")
   }
 
   // Processed Notes list based on Search, Filter, Sort

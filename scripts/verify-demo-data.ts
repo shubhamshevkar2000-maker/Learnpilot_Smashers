@@ -29,7 +29,7 @@ async function verify() {
   const { data: modules } = await authClient.from("learning_modules").select("*").eq("user_id", userId).order("sequence_order", { ascending: true })
   const { data: activities } = await authClient.from("module_activities").select("*").eq("user_id", userId).order("sequence_order", { ascending: true })
   const { data: assessments } = await authClient.from("assessment_results").select("*").eq("user_id", userId)
-  const { data: notes } = await authClient.from("learner_notes" as any).select("*").eq("user_id", userId)
+  const { data: notes } = await authClient.from("learner_notes" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false })
 
   console.log("=== DEMO DATA VERIFICATION ===")
   console.log(`User ID: ${userId}`)
@@ -48,7 +48,16 @@ async function verify() {
   })
   console.log(`Notes Count: ${notes?.length}`)
   notes?.forEach((n: any) => {
-    console.log(`  - "${n.topic || n.title}" (Content: ${Math.round((n.note_content || n.content || "").length)} chars)`)
+    let meta: any = {}
+    try {
+      if (n.difficulty_reflection) meta = JSON.parse(n.difficulty_reflection)
+    } catch {}
+    const isPinned = n.is_pinned ?? meta.is_pinned ?? false
+    const tags = n.tags || meta.tags || []
+    const source = n.source_type || meta.source_type || "general"
+    const title = n.title || n.topic || "Untitled"
+    const content = n.content || n.note_content || ""
+    console.log(`  - [${isPinned ? "PINNED" : "NORMAL"}] "${title}" | Tags: [${tags.join(", ")}] | Source: ${source} | Content: ${content.length} chars`)
   })
 }
 
